@@ -14,6 +14,9 @@ class FileCog(commands.Cog):
     @group.command(name="add", description="Registers a new file")
     @app_commands.describe(url='Link to the file', filename='What to call the file', path='The special glanvas url to give to this file')
     async def add_file(self, interaction: discord.Interaction, url: str, filename: str, path: str):
+        url = url.strip()
+        filename = filename.strip()
+        path = path.strip()
         if (url == ''):
             await interaction.response.send_message('ERROR: `url` cannot be empty.')
             return
@@ -25,6 +28,11 @@ class FileCog(commands.Cog):
             return
         if (url[:8] != 'https://'):
             await interaction.response.send_message('ERROR: `url` must start with `https://`.')
+
+        # make sure url is a preview URL
+        arr = url.split('/')
+        arr[-1] = 'preview'
+        url = '/'.join(arr)
 
         fileObj = {
             'key': path,
