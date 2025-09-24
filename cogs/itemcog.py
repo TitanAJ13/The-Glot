@@ -14,6 +14,8 @@ class ItemCog(commands.Cog):
     @group.command(name="add", description="Adds a new item to a module")
     @app_commands.describe(moduleposition="The position of the item's container module", title='Item display title', type='The type of item to add', url='The url for the item. Leave blank if making a header', hidden='Optional: If the item should be hidden from view', position='Optional: The position to insert it into')
     async def add_item(self, interaction: discord.Interaction, moduleposition: int, title: str, type: Literal['internal', 'external', 'file', 'music', 'page','form','header'], url: str, hidden: Optional[Literal['True', 'False']] = 'False', position: Optional[int] = None):
+        title = title.strip()
+        url = url.strip()
         if (moduleposition < 1):
             await interaction.response.send_message('ERROR: `moduleposition` cannot be less than 1')
             return
@@ -78,21 +80,21 @@ class ItemCog(commands.Cog):
         if (type is None and title is None and url is None):
             await interaction.response.send_message('ERROR: at least one of `type`, `title`, or `url` must be defined')
             return
-        if (title is not None and title == ''):
+        if (title is not None and title.strip() == ''):
             await interaction.response.send_message('ERROR: `title` cannot be empty if it is used')
             return
-        if (url is not None and url == ''):
+        if (url is not None and url.strip() == ''):
             await interaction.response.send_message('ERROR: `url` cannot be empty if it is used')
             return
         
         changes = {}
 
         if (title is not None):
-            changes.display_name = title
+            changes.display_name = title.strip()
         if (type is not None):
             changes.type = type
         if (url is not None):
-            changes.url = url
+            changes.url = url.strip()
         
         itemObj = {
             'moduleposition': moduleposition,
