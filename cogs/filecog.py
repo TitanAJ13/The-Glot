@@ -4,6 +4,17 @@ from discord import app_commands
 from discord.ext import commands
 import requests
 
+def handleResponse(response: requests.Response, success: str) -> str:
+    try:
+        response.raise_for_status()
+        json = response.json()
+        if (json['status'] == 'success'):
+            return success
+        else:
+            return "Something went wrong..."
+    except Exception as e:
+        return f"ERROR: {e}"
+
 class FileCog(commands.Cog):
     def __init__(self, bot: commands.Bot, base) -> None:
         self.bot = bot
@@ -40,12 +51,9 @@ class FileCog(commands.Cog):
             'display_name': filename
         }
 
-        response = requests.post(self.URL, json=fileObj).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully registered the file')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.post(self.URL, json=fileObj)
+        result = handleResponse(response, 'Successfully registered the file')
+        await interaction.response.send_message(result)
 
     @group.command(name="remove", description="Removes a registered file")
     @app_commands.describe(path='The special glanvas url to remove')
@@ -54,12 +62,9 @@ class FileCog(commands.Cog):
             await interaction.response.send_message('ERROR: `path` cannot be empty')
             return
 
-        response = requests.delete(self.URL, json={'key': path}).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully removed the registered file')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.delete(self.URL, json={'key': path})
+        result = handleResponse(response, 'Successfully removed the registered file')
+        await interaction.response.send_message(result)
 
     @group.command(name="edit", description="Edits an existing file registration")
     @app_commands.describe(path ='The special glanvas url for the file', new_path = "The updated special glanvas url", url='The url for the file', filename='What to call the file' )
@@ -94,12 +99,9 @@ class FileCog(commands.Cog):
             'changes': changes
         }
 
-        response = requests.patch(self.URL, json=fileObj).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully edited the registered file')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.patch(self.URL, json=fileObj)
+        result = handleResponse(response, 'Successfully edited the registered file')
+        await interaction.response.send_message(result)
         
 
 async def setup(bot: commands.Bot):

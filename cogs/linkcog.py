@@ -4,6 +4,17 @@ from discord import app_commands
 from discord.ext import commands
 import requests
 
+def handleResponse(response: requests.Response, success: str) -> str:
+    try:
+        response.raise_for_status()
+        json = response.json()
+        if (json['status'] == 'success'):
+            return success
+        else:
+            return "Something went wrong..."
+    except Exception as e:
+        return f"ERROR: {e}"
+
 class LinkCog(commands.Cog):
     def __init__(self, bot: commands.Bot, base) -> None:
         self.bot = bot
@@ -29,6 +40,8 @@ class LinkCog(commands.Cog):
         if (type == 'external' and url[:8] != 'https://'):
             await interaction.response.send_message("ERROR: External URLs must start with `https://`.")
             return
+        
+
         title = title.strip()
         url = url.strip()
         linkObj = {
@@ -37,11 +50,11 @@ class LinkCog(commands.Cog):
             'url': url,
             'position': position
         }
-        response = requests.post(self.URL, json=linkObj).json()
-        if (response.status == 'success'):
-            await interaction.response.send_message('Succesfully posted link')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+
+
+        response = requests.post(self.URL, json=linkObj)
+        result = handleResponse(response, 'Successfully added the link')
+        await interaction.response.send_message(result)
 
 
     @group.command(name="remove", description="Removes an existing link")
@@ -51,11 +64,9 @@ class LinkCog(commands.Cog):
             await interaction.response.send_message('ERROR: `position` cannot be less than 1')
             return
 
-        response = requests.delete(self.URL, json={'position': position}).json()
-        if (response.status == 'success'):
-            await interaction.response.send_message(f'Successfully removed the link at position {position}')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.delete(self.URL, json={'position': position})
+        result = handleResponse(response, 'Successfully removed the link')
+        await interaction.response.send_message(result)
 
     @group.command(name="edit", description="Edits an existing link")
     @app_commands.describe(position='The position of the link to edit', type='Type of link', title='Link display title', url='The actual URL')
@@ -87,12 +98,9 @@ class LinkCog(commands.Cog):
             'changes': changes
         }
 
-        response = requests.patch(self.URL, json=linkObj).json()
-
-        if (response.status == 'success'):
-            interaction.response.send_message('Successfully edited the link')
-        else:
-            interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.patch(self.URL, json=linkObj)
+        result = handleResponse(response, 'Successfully edited the link')
+        await interaction.response.send_message(result)
 
     @group.command(name="move", description="Move a link to a different position")
     @app_commands.describe(position1='The current position of the link', position2='The position to end up at')
@@ -104,12 +112,9 @@ class LinkCog(commands.Cog):
             await interaction.response.send_message('ERROR: `position2` cannot be less than 1')
             return
         
-        response = requests.put(self.URL, json={'position1': position1, 'position2': position2}).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully moved the link')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.put(self.URL, json={'position': position1, 'position2': position2})
+        result = handleResponse(response, 'Successfully moved the link')
+        await interaction.response.send_message(result)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(LinkCog(bot))

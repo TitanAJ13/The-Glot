@@ -4,6 +4,18 @@ from discord import app_commands
 from discord.ext import commands
 import requests
 
+def handleResponse(response: requests.Response, success: str) -> str:
+    try:
+        response.raise_for_status()
+        json = response.json()
+        if (json['status'] == 'success'):
+            return success
+        else:
+            return "Something went wrong..."
+    except Exception as e:
+        return f"ERROR: {e}"
+
+
 class ModuleCog(commands.Cog):
     def __init__(self, bot: commands.Bot, base) -> None:
         self.bot = bot
@@ -27,12 +39,9 @@ class ModuleCog(commands.Cog):
             'hidden': bool(hidden)
         }
 
-        response = requests.post(self.URL, json=moduleObj).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully added the new module')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.post(self.URL, json=moduleObj)
+        result = handleResponse(response, 'Successfully added the new module')
+        await interaction.response.send_message(result)
 
     @group.command(name="remove", description="Removes an existing module and all items within it")
     @app_commands.describe(position='The position of the module in the list')
@@ -41,12 +50,9 @@ class ModuleCog(commands.Cog):
             await interaction.response.send_message('ERROR: `position` cannot be less than 1')
             return
         
-        response = requests.delete(self.URL, json={'position': position}).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully deleted the module')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.delete(self.URL, json={'position': position})
+        result = handleResponse(response, 'Successfully deleted the module')
+        await interaction.response.send_message(result)
 
     @group.command(name="edit", description="Edits an existing module")
     @app_commands.describe(position='The position of the module to edit', title='Module display title')
@@ -65,12 +71,9 @@ class ModuleCog(commands.Cog):
             }
         }
 
-        response = requests.patch(self.URL, json=moduleObj).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully editted the module')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.patch(self.URL, json=moduleObj)
+        result = handleResponse(response, 'Successfully edited the module')
+        await interaction.response.send_message(result)
 
     @group.command(name="move", description="Moves a module to a different position")
     @app_commands.describe(position1='The current position of the module', position2='The position to end up at')
@@ -82,12 +85,8 @@ class ModuleCog(commands.Cog):
             await interaction.response.send_message('ERROR: `position2` cannot be less than 1')
             return
         
-        response = requests.put(self.URL, json={'position1': position1, 'position2': position2}).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully moved the module')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.put(self.URL, json={'position': position1, 'position2': position2})
+        result = handleResponse(response, 'Successfully moved the module')
 
     @group.command(name="hide", description="Hides a module from view")
     @app_commands.describe(position='The position of the module')
@@ -103,12 +102,9 @@ class ModuleCog(commands.Cog):
             }
         }
 
-        response = requests.patch(self.URL, json=moduleObj).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully hid the module')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.patch(self.URL, json=moduleObj)
+        result = handleResponse(response, 'Successfully hid the module')
+        await interaction.response.send_message(result)
 
     @group.command(name="show", description="Makes a hidden module visible")
     @app_commands.describe(position='The position of the module')
@@ -124,12 +120,9 @@ class ModuleCog(commands.Cog):
             }
         }
 
-        response = requests.patch(self.URL, json=moduleObj).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully made the module visible')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.patch(self.URL, json=moduleObj)
+        result = handleResponse(response, 'Successfully made the module visible')
+        await interaction.response.send_message(result)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ModuleCog(bot))

@@ -4,6 +4,17 @@ from discord import app_commands
 from discord.ext import commands
 import requests
 
+def handleResponse(response: requests.Response, success: str) -> str:
+    try:
+        response.raise_for_status()
+        json = response.json()
+        if (json['status'] == 'success'):
+            return success
+        else:
+            return "Something went wrong..."
+    except Exception as e:
+        return f"ERROR: {e}"
+
 class MusicCog(commands.Cog):
     def __init__(self, bot: commands.Bot, base) -> None:
         self.bot = bot
@@ -35,12 +46,9 @@ class MusicCog(commands.Cog):
             'display_name': filename
         }
 
-        response = requests.post(self.URL, json=musicObj).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully registered the sheetmusic')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.post(self.URL, json=musicObj)
+        result = handleResponse(response, 'Successfully registered the sheetmusic')
+        await interaction.response.send_message(result)
 
     @group.command(name="remove", description="Removes registered sheetmusic")
     @app_commands.describe(path='The special glanvas url to remove')
@@ -49,12 +57,9 @@ class MusicCog(commands.Cog):
             await interaction.response.send_message('ERROR: `path` cannot be empty')
             return
 
-        response = requests.delete(self.URL, json={'key': path}).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully removed the registered sheetmusic')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.delete(self.URL, json={'key': path})
+        result = handleResponse(response, 'Successfully removed the registered sheetmusic')
+        await interaction.response.send_message(result)
 
     @group.command(name="edit", description="Edits an existing sheetmusic registration")
     @app_commands.describe(path ='The special glanvas url for the sheetmusic', new_path = "The updated special glanvas url", url='The url for the sheetmusic', filename='What to call the sheetmusic' )
@@ -90,12 +95,9 @@ class MusicCog(commands.Cog):
             'changes': changes
         }
 
-        response = requests.patch(self.URL, json=musicObj).json()
-
-        if (response.status == 'success'):
-            await interaction.response.send_message('Successfully edited the registered sheetmusic')
-        else:
-            await interaction.response.send_message(f'ERROR: {response.message}')
+        response = requests.patch(self.URL, json=musicObj)
+        result = handleResponse(response, 'Successfully edited the registered sheetmusic')
+        await interaction.response.send_message(result)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(MusicCog(bot))
