@@ -14,6 +14,9 @@ class MusicCog(commands.Cog):
     @group.command(name="add", description="Registers new sheetmusic")
     @app_commands.describe(url='Link to the sheetmusic', filename='What to call the sheetmusic', path='The special glanvas url to give to this sheetmusic')
     async def add_music(self, interaction: discord.Interaction, url: str, filename: str, path: str):
+        url = url.strip()
+        filename = filename.strip()
+        path = path.strip()
         if (url == ''):
             await interaction.response.send_message('ERROR: `url` cannot be empty.')
             return
@@ -56,30 +59,31 @@ class MusicCog(commands.Cog):
     @group.command(name="edit", description="Edits an existing sheetmusic registration")
     @app_commands.describe(path ='The special glanvas url for the sheetmusic', new_path = "The updated special glanvas url", url='The url for the sheetmusic', filename='What to call the sheetmusic' )
     async def edit_music(self, interaction: discord.Interaction, path: str, new_path: Optional[str] = None, filename: Optional[str] = None, url: Optional[str] = None):
+        path = path.strip()
         if (path == ''):
             await interaction.response.send_message('ERROR: `path` cannot be empty')
             return
         if (new_path is None and filename is None and url is None):
             await interaction.response.send_message('ERROR: at least one of `new_path`, `filename`, or `url` must be defined')
             return
-        if (new_path is not None and new_path == ''):
+        if (new_path is not None and new_path.strip() == ''):
             await interaction.response.send_message('ERROR: `new_path` cannot be empty if it is used')
             return
-        if (filename is not None and filename == ''):
+        if (filename is not None and filename.strip() == ''):
             await interaction.response.send_message('ERROR: `filename` cannot be empty if it is used')
             return
-        if (url is not None and url == ''):
+        if (url is not None and url.strip() == ''):
             await interaction.response.send_message('ERROR: `url` cannot be empty if it is used')
             return
         
         changes = {}
 
         if (new_path is not None):
-            changes.path = new_path
+            changes.path = new_path.strip()
         if (filename is not None):
-            changes.display_name = filename
+            changes.display_name = filename.strip()
         if (url is not None):
-            changes.url = url
+            changes.url = url.strip()
 
         musicObj = {
             'key': path,
