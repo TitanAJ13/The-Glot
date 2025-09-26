@@ -12,8 +12,8 @@ def handleResponse(response: requests.Response, success: str) -> str:
             return success
         else:
             return "Something went wrong..."
-    except Exception as e:
-        return f"ERROR: {e}"
+    except requests.HTTPError as e:
+        return f"ERROR: {e.response.text}"
 
 class LinkCog(commands.Cog):
     def __init__(self, bot: commands.Bot, base) -> None:
@@ -87,11 +87,11 @@ class LinkCog(commands.Cog):
         changes = {}
 
         if (type is not None):
-            changes.type = type
+            changes['type'] = type
         if (title is not None):
-            changes.title = title
+            changes['title'] = title
         if (url is not None):
-            changes.url = url
+            changes['url'] = url
 
         linkObj = {
             'position': position,

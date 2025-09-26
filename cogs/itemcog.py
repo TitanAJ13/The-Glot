@@ -12,8 +12,8 @@ def handleResponse(response: requests.Response, success: str) -> str:
             return success
         else:
             return "Something went wrong..."
-    except Exception as e:
-        return f"ERROR: {e}"
+    except requests.HTTPError as e:
+        return f"ERROR: {e.response.text}"
 
 class ItemCog(commands.Cog):
     def __init__(self, bot: commands.Bot, base) -> None:
@@ -23,7 +23,7 @@ class ItemCog(commands.Cog):
     group = app_commands.Group(name='item', description='Make changes to the module subitems on the Glanvas', guild_ids=[1378895395253387344])
 
     @group.command(name="add", description="Adds a new item to a module")
-    @app_commands.describe(moduleposition="The position of the item's container module", title='Item display title', type='The type of item to add', url='The url for the item. Leave blank if making a header', hidden='Optional: If the item should be hidden from view', position='Optional: The position to insert it into')
+    @app_commands.describe(moduleposition="The position of the item's container module", title='Item display title', type='The type of item to add', url='The url for the item. Type `None` if making a header', hidden='Optional: If the item should be hidden from view', position='Optional: The position to insert it into')
     async def add_item(self, interaction: discord.Interaction, moduleposition: int, title: str, type: Literal['internal', 'external', 'file', 'music', 'page','form','header'], url: str, hidden: Optional[Literal['True', 'False']] = 'False', position: Optional[int] = None):
         title = title.strip()
         url = url.strip()
@@ -95,11 +95,11 @@ class ItemCog(commands.Cog):
         changes = {}
 
         if (title is not None):
-            changes.display_name = title.strip()
+            changes['display_name'] = title.strip()
         if (type is not None):
-            changes.type = type
+            changes['type'] = type
         if (url is not None):
-            changes.url = url.strip()
+            changes['url'] = url.strip()
         
         itemObj = {
             'moduleposition': moduleposition,

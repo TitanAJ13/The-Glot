@@ -12,8 +12,8 @@ def handleResponse(response: requests.Response, success: str) -> str:
             return success
         else:
             return "Something went wrong..."
-    except Exception as e:
-        return f"ERROR: {e}"
+    except requests.HTTPError as e:
+        return f"ERROR: {e.response.text}"
 
 class FileCog(commands.Cog):
     def __init__(self, bot: commands.Bot, base) -> None:
@@ -88,11 +88,11 @@ class FileCog(commands.Cog):
         changes = {}
 
         if (new_path is not None):
-            changes.path = new_path
+            changes['path'] = new_path
         if (filename is not None):
-            changes.display_name = filename
+            changes['display_name'] = filename
         if (url is not None):
-            changes.url = url
+            changes['url'] = url
 
         fileObj = {
             'key': path,

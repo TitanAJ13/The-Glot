@@ -12,8 +12,8 @@ def handleResponse(response: requests.Response, success: str) -> str:
             return success
         else:
             return "Something went wrong..."
-    except Exception as e:
-        return f"ERROR: {e}"
+    except requests.HTTPError as e:
+        return f"ERROR: {e.response.text}"
 
 class MusicCog(commands.Cog):
     def __init__(self, bot: commands.Bot, base) -> None:
@@ -84,11 +84,11 @@ class MusicCog(commands.Cog):
         changes = {}
 
         if (new_path is not None):
-            changes.path = new_path.strip()
+            changes['path'] = new_path.strip()
         if (filename is not None):
-            changes.display_name = filename.strip()
+            changes['display_name'] = filename.strip()
         if (url is not None):
-            changes.url = url.strip()
+            changes['url'] = url.strip()
 
         musicObj = {
             'key': path,

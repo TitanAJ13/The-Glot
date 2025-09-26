@@ -84,12 +84,12 @@ async def on_ready():
     #     ]
     # for i in range(len(cogfiles)):
     #     await bot.load_extension(f'cogs.{cogfiles[i]}', base='http://127.0.0.1:5000/')
-    # await bot.add_cog(LinkCog(bot,'http://127.0.0.1:5000/'), guild=guildTest)
-    # await bot.add_cog(FileCog(bot,'http://127.0.0.1:5000/'), guild=guildTest)
-    # await bot.add_cog(ItemCog(bot,'http://127.0.0.1:5000/'), guild=guildTest)
-    # await bot.add_cog(ModuleCog(bot,'http://127.0.0.1:5000/'), guild=guildTest)
-    # await bot.add_cog(MusicCog(bot,'http://127.0.0.1:5000/'), guild=guildTest)
-    await bot.add_cog(AnnouncementCog(bot,'https://aja138.pythonanywhere.com/'), guild=guildPMGC)
+    await bot.add_cog(LinkCog(bot,'http://127.0.0.1:5000/'), guild=guildTest)
+    await bot.add_cog(FileCog(bot,'http://127.0.0.1:5000/'), guild=guildTest)
+    await bot.add_cog(ItemCog(bot,'http://127.0.0.1:5000/'), guild=guildTest)
+    await bot.add_cog(ModuleCog(bot,'http://127.0.0.1:5000/'), guild=guildTest)
+    await bot.add_cog(MusicCog(bot,'http://127.0.0.1:5000/'), guild=guildTest)
+    await bot.add_cog(AnnouncementCog(bot,'http://127.0.0.1:5000/'), guild=guildPMGC)
     # await bot.add_cog(MyCog(bot), guild=guildTest)
 
     print("Loaded Cogs!")

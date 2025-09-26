@@ -12,8 +12,8 @@ def handleResponse(response: requests.Response, success: str) -> str:
             return success
         else:
             return "Something went wrong..."
-    except Exception as e:
-        return f"ERROR: {e}"
+    except requests.HTTPError as e:
+        return f"ERROR: {e.response.text}"
 
 
 class ModuleCog(commands.Cog):
