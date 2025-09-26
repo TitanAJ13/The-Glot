@@ -3,17 +3,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import requests
-
-def handleResponse(response: requests.Response, success: str) -> str:
-    try:
-        response.raise_for_status()
-        json = response.json()
-        if (json['status'] == 'success'):
-            return success
-        else:
-            return "Something went wrong..."
-    except requests.HTTPError as e:
-        return f"ERROR: {e.response.text}"
+from cogs.helper import handleResponse
 
 
 class ModuleCog(commands.Cog):
@@ -36,7 +26,7 @@ class ModuleCog(commands.Cog):
         moduleObj ={
             'display_name': title,
             'position': position,
-            'hidden': bool(hidden)
+            'hidden': True if hidden == "True" else False
         }
 
         response = requests.post(self.URL, json=moduleObj)
@@ -87,6 +77,7 @@ class ModuleCog(commands.Cog):
         
         response = requests.put(self.URL, json={'position': position1, 'position2': position2})
         result = handleResponse(response, 'Successfully moved the module')
+        await interaction.response.send_message(result)
 
     @group.command(name="hide", description="Hides a module from view")
     @app_commands.describe(position='The position of the module')

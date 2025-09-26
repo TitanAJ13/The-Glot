@@ -3,17 +3,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import requests
-
-def handleResponse(response: requests.Response, success: str) -> str:
-    try:
-        response.raise_for_status()
-        json = response.json()
-        if (json['status'] == 'success'):
-            return success
-        else:
-            return "Something went wrong..."
-    except requests.HTTPError as e:
-        return f"ERROR: {e.response.text}"
+from cogs.helper import handleResponse
 
 class ItemCog(commands.Cog):
     def __init__(self, bot: commands.Bot, base) -> None:
@@ -52,7 +42,7 @@ class ItemCog(commands.Cog):
             'type': type,
             'url': url,
             'position': position,
-            'hidden': bool(hidden)
+            'hidden': True if hidden == "True" else False
         }
         
         response = requests.post(self.URL, json=itemObj)
