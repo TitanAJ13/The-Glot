@@ -8,21 +8,22 @@ from datetime import date, datetime, timezone
 import re
 import markdown
 import requests
-from extensions import StrikethroughExtension
+from cogs.md_extensions import StrikethroughExtension
+from glot import Glot
 
 def utc_to_local(time: datetime):
         return time.replace(tzinfo=timezone.utc).astimezone(tz=None)
 
 class AnnouncementCog(commands.Cog):
-    def __init__(self, bot: commands.Bot, base) -> None:
-        self.bot = bot
-        self.URL = base + "announcements/"
+    def __init__(self, bot: Glot, base) -> None:
+        self.bot: Glot = bot
+        self.URL: str = base + "announcements/"
         self.ctx_menu = app_commands.ContextMenu(
             name='Post To Glanvas',
             callback=self.post_announcement,
-            guild_ids=[1378895395253387344,614104404102086658]
+            guild_ids=[bot.currentGuild.id]
         )
-        self.bot.tree.add_command(self.ctx_menu, guild=discord.Object(614104404102086658))
+        self.bot.tree.add_command(self.ctx_menu, guild=bot.currentGuild)
 
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
@@ -61,7 +62,7 @@ class AnnouncementCog(commands.Cog):
     #     else:
     #         await interaction.response.send_message(f'ERROR: {response.message}')
 
-    @app_commands.guilds(614104404102086658)
+    # @app_commands.guilds(614104404102086658)
     @app_commands.checks.has_permissions(administrator=True)
     async def post_announcement(self, interaction: discord.Interaction, message: discord.Message):
         content = message.content
@@ -147,5 +148,5 @@ class PromptTitle(ui.Modal, title="Post an Announcement"):
         # await interaction.response.send_modal(alert)
 
 
-async def setup(bot: commands.Bot, base):
-    await bot.add_cog(AnnouncementCog(bot, base))
+async def setup(bot: Glot):
+    await bot.add_cog(AnnouncementCog(bot, bot.glanvasURL))

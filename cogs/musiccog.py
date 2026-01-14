@@ -4,13 +4,16 @@ from discord import app_commands
 from discord.ext import commands
 import requests
 from cogs.helper import handleResponse
+from glot import Glot
 
 class MusicCog(commands.Cog):
-    def __init__(self, bot: commands.Bot, base) -> None:
-        self.bot = bot
-        self.URL = base + 'musicdata/'
+    group = app_commands.Group(name='music', description='Make changes to the registered sheetmusic on the Glanvas')
 
-    group = app_commands.Group(name='music', description='Make changes to the registered sheetmusic on the Glanvas', guild_ids=[1378895395253387344])
+    def __init__(self, bot: Glot, base) -> None:
+        self.bot: Glot = bot
+        self.URL: str = base + 'musicdata/'
+        self.group._guild_ids = [bot.currentGuild.id]
+
 
     @group.command(name="add", description="Registers new sheetmusic")
     @app_commands.describe(url='Link to the sheetmusic', filename='What to call the sheetmusic', path='The special glanvas url to give to this sheetmusic')
@@ -89,5 +92,5 @@ class MusicCog(commands.Cog):
         result = handleResponse(response, 'Successfully edited the registered sheetmusic')
         await interaction.response.send_message(result)
 
-async def setup(bot: commands.Bot):
-    await bot.add_cog(MusicCog(bot))
+async def setup(bot: Glot):
+    await bot.add_cog(MusicCog(bot, bot.glanvasURL), guild=bot.currentGuild)

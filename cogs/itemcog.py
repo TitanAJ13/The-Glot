@@ -4,13 +4,15 @@ from discord import app_commands
 from discord.ext import commands
 import requests
 from cogs.helper import handleResponse
+from glot import Glot
 
 class ItemCog(commands.Cog):
-    def __init__(self, bot: commands.Bot, base) -> None:
-        self.bot = bot
-        self.URL = base + 'items/'
+    group = app_commands.Group(name='item', description='Make changes to the module subitems on the Glanvas')
 
-    group = app_commands.Group(name='item', description='Make changes to the module subitems on the Glanvas', guild_ids=[1378895395253387344])
+    def __init__(self, bot: Glot, base) -> None:
+        self.bot: Glot= bot
+        self.URL: str = base + 'items/'
+        self.group._guild_ids = [bot.currentGuild.id]
 
     @group.command(name="add", description="Adds a new item to a module")
     @app_commands.describe(moduleposition="The position of the item's container module", title='Item display title', type='The type of item to add', url='The url for the item. Type `None` if making a header', hidden='Optional: If the item should be hidden from view', position='Optional: The position to insert it into')
@@ -26,8 +28,8 @@ class ItemCog(commands.Cog):
         if (url == ''):
             await interaction.response.send_message('ERROR: `url` cannot be empty')
             return
-        if (type == 'internal' and url not in ['home', 'announcements', 'modules']):
-            await interaction.response.send_message("ERROR: Internal URLs can only be `home`, `modules`, or `announcements`.")
+        if (type == 'internal' and url not in ['home', 'announcements', 'modules', 'calendar']):
+            await interaction.response.send_message("ERROR: Internal URLs can only be `home`, `modules`, `calendar` or `announcements`.")
             return
         if (type == 'external' and url[:8] != 'https://'):
             await interaction.response.send_message("ERROR: External URLs must start with `https://`.")
@@ -39,7 +41,7 @@ class ItemCog(commands.Cog):
         itemObj = {
             'moduleposition': moduleposition,
             'display': title,
-            'type': type,
+            'type': "link" if (type == 'internal' or type == 'external') else type,
             'url': url,
             'position': position,
             'hidden': True if hidden == "True" else False
@@ -168,5 +170,5 @@ class ItemCog(commands.Cog):
         result = handleResponse(response, 'Successfully made the module item visible')
         await interaction.response.send_message(result)
 
-async def setup(bot: commands.Bot):
-    await bot.add_cog(ItemCog(bot))
+async def setup(bot: Glot):
+    await bot.add_cog(ItemCog(bot, bot.glanvasURL), guild = bot.currentGuild)

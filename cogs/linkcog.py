@@ -4,13 +4,16 @@ from discord import app_commands
 from discord.ext import commands
 import requests
 from cogs.helper import handleResponse
+from glot import Glot
 
 class LinkCog(commands.Cog):
-    def __init__(self, bot: commands.Bot, base) -> None:
-        self.bot = bot
-        self.URL = base + 'links/'
+    group = app_commands.Group(name='link', description='Make changes to the links on the Glanvas')
 
-    group = app_commands.Group(name='link', description='Make changes to the links on the Glanvas', guild_ids=[1378895395253387344])
+    def __init__(self, bot: Glot, base) -> None:
+        self.bot: Glot = bot
+        self.URL: str = base + 'links/'
+        self.group._guild_ids = [bot.currentGuild.id]
+
 
     @group.command(name="add", description="Adds a new link")
     @app_commands.describe(type='Type of link', title='Link display title', url='The actual URL', position='Optional: The position to insert it into')
@@ -106,5 +109,5 @@ class LinkCog(commands.Cog):
         result = handleResponse(response, 'Successfully moved the link')
         await interaction.response.send_message(result)
 
-async def setup(bot: commands.Bot):
-    await bot.add_cog(LinkCog(bot))
+async def setup(bot: Glot):
+    await bot.add_cog(LinkCog(bot, bot.glanvasURL), guild=bot.currentGuild)
