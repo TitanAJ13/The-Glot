@@ -1,4 +1,5 @@
 import os
+from typing import Literal
 # from typing import Any, Literal, Optional
 import discord
 from discord.ext import commands
@@ -52,8 +53,8 @@ async def on_ready():
 
     bot.tree.clear_commands(guild=None)
 
-    bot.glanvasURL = 'http://127.0.0.1:5000/'
-    bot.setGuild(guildTest)
+    bot.glanvasURL = 'https://pmgc.pythonanywhere.com/'
+    bot.setGuild(guildPMGC)
     bot.roster_id = "1bL1uw6ohQ9HNASGVA46ve6_koTpJ6htSBPrwwyWq-TQ"
 
     for filename in os.listdir('cogs'):
@@ -80,6 +81,8 @@ async def on_ready():
                 print(f'Extension not found: {filename[:-3]}')
             except Exception as e:
                 print(f'Failed to load extension {filename[:-3]}. Reason: {e}')
+
+    await bot.load_extension("loadercog")
 
     print("Synced the following commands:\n", await bot.tree.sync(guild=bot.currentGuild))
     print("Connected to the Guild!")
@@ -130,64 +133,6 @@ async def clear(ctx):
 #     await interaction.response.send_message(f"Test command ran",embed=discord.Embed.from_dict(embed))
 #     interaction.
 
-@bot.command(name="reloadcogs", help="Reloads the cogs dynamically")
-@commands.has_guild_permissions(administrator=True)
-async def reload_cogs(ctx: commands.Context):
-    success = []
-    failure = []
-    for filename in os.listdir("cogs"):
-        if (filename.endswith("cog.py")):
-            try:
-                await bot.reload_extension(f'cogs.{filename[:-3]}')
-                success.append(filename)
-            except Exception as e:
-                failure.append((filename,e))
 
-    result = ""
-    if (len(success) > 0):
-        result = result + "Successfully Reloaded:"
-        for file in success:
-            result = result + f"\n* {file}"
-    else:
-        result = result + "No cogs successfully Reloaded..."
-
-    if (len(failure) > 0):
-        result = result + "\n\nFailed to Reload:"
-        for (file, error) in failure:
-            result = result + f"\n* {file} - {error}"
-    else:
-        result = result + "\n\nNo Failures!"
-
-    await ctx.send(result)
-
-@bot.command(name="reloadext", help="Reloads the cogs dynamically")
-@commands.has_guild_permissions(administrator=True)
-async def reload_extensions(ctx: commands.Context):
-    success = []
-    failure = []
-    for filename in os.listdir("extensions"):
-        if (filename.endswith(".py")):
-            try:
-                await bot.reload_extension(f'extensions.{filename[:-3]}')
-                success.append(filename)
-            except Exception as e:
-                failure.append((filename,e))
-
-    result = ""
-    if (len(success) > 0):
-        result = result + "Successfully Reloaded:"
-        for file in success:
-            result = result + f"\n* {file}"
-    else:
-        result = result + "No extensions successfully Reloaded..."
-
-    if (len(failure) > 0):
-        result = result + "\n\nFailed to Reload:"
-        for (file, error) in failure:
-            result = result + f"\n* {file} - {error}"
-    else:
-        result = result + "\n\nNo Failures!"
-
-    await ctx.send(result)
 
 bot.run(TOKEN)
