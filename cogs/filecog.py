@@ -78,6 +78,12 @@ class FileCog(commands.Cog):
             await interaction.response.send_message('ERROR: `url` cannot be empty if it is used')
             return
         
+        # make sure url is a preview URL
+        if (url is not None):
+            arr = url.split('/')
+            arr[-1] = 'preview'
+            url = '/'.join(arr)
+        
         changes = {}
 
         if (new_path is not None):
