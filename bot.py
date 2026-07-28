@@ -22,6 +22,20 @@ import authenticate
 # import re
 # import markdown
 # from extensions import StrikethroughExtension
+import sys
+
+debug = True
+if (len(sys.argv) > 2):
+    print(f"Usage: python {sys.argv[0]} [guild:0|1]\n\tguild = 0: Test Server (default)\n\tguild = 1: PMGC Server", flush=True)
+    sys.exit()
+elif (len(sys.argv) == 2):
+    if (sys.argv[1] == '1'): debug = False
+    if (sys.argv[1] == '0'): pass
+    else:
+        print(f"Usage: python {sys.argv[0]} [guild:0|1]\n\tguild = 0: Test Server (default)\n\tguild = 1: PMGC Server", flush=True)
+        sys.exit()
+
+
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -54,7 +68,7 @@ async def on_ready():
     bot.tree.clear_commands(guild=None)
 
     bot.glanvasURL = 'https://pmgc.pythonanywhere.com/'
-    bot.setGuild(guildPMGC)
+    bot.setGuild(guildTest if debug else guildPMGC)
     bot.roster_id = "1bL1uw6ohQ9HNASGVA46ve6_koTpJ6htSBPrwwyWq-TQ"
 
     for filename in os.listdir('cogs'):
