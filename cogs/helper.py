@@ -1,5 +1,7 @@
 import requests
+from requests.auth import AuthBase
 import html
+import os
 
 def handleResponse(response: requests.Response, success: str) -> str:
     try:
@@ -17,3 +19,11 @@ def handleResponse(response: requests.Response, success: str) -> str:
 def parseError(error: requests.HTTPError) -> str:
     description = error.response.text.split("<p>")[1].split("</p>")[0]
     return html.unescape(description)
+
+class BearerAuth(AuthBase):
+    def __init__(self):
+        super().__init__()
+
+    def __call__(self, r):
+        r.headers["Authorization"] = f"Bearer ${os.getenv('BEARER')}"
+        return r

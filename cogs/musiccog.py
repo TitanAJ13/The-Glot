@@ -3,7 +3,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import requests
-from cogs.helper import handleResponse
+from cogs.helper import handleResponse, BearerAuth
 from glot import Glot
 
 class MusicCog(commands.Cog):
@@ -39,7 +39,7 @@ class MusicCog(commands.Cog):
             'display_name': filename
         }
 
-        response = requests.post(self.URL, json=musicObj)
+        response = requests.post(self.URL, json=musicObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully registered the sheetmusic')
         await interaction.response.send_message(result)
 
@@ -50,7 +50,7 @@ class MusicCog(commands.Cog):
             await interaction.response.send_message('ERROR: `path` cannot be empty')
             return
 
-        response = requests.delete(self.URL, json={'key': path})
+        response = requests.delete(self.URL, json={'key': path}, auth=BearerAuth())
         result = handleResponse(response, 'Successfully removed the registered sheetmusic')
         await interaction.response.send_message(result)
 
@@ -88,7 +88,7 @@ class MusicCog(commands.Cog):
             'changes': changes
         }
 
-        response = requests.patch(self.URL, json=musicObj)
+        response = requests.patch(self.URL, json=musicObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully edited the registered sheetmusic')
         await interaction.response.send_message(result)
 

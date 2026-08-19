@@ -3,7 +3,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import requests
-from cogs.helper import handleResponse
+from cogs.helper import handleResponse, BearerAuth
 from glot import Glot
 
 class ItemCog(commands.Cog):
@@ -47,7 +47,7 @@ class ItemCog(commands.Cog):
             'hidden': True if hidden == "True" else False
         }
         
-        response = requests.post(self.URL, json=itemObj)
+        response = requests.post(self.URL, json=itemObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully added the module item')
         await interaction.response.send_message(result)
 
@@ -61,7 +61,7 @@ class ItemCog(commands.Cog):
             await interaction.response.send_message('ERROR: `position` cannot be less than 1')
             return
         
-        response = requests.delete(self.URL, json={'moduleposition': moduleposition, 'position': position})
+        response = requests.delete(self.URL, json={'moduleposition': moduleposition, 'position': position}, auth=BearerAuth())
         result = handleResponse(response, 'Successfully deleted the module item')
         await interaction.response.send_message(result)
 
@@ -99,7 +99,7 @@ class ItemCog(commands.Cog):
             'changes': changes
         }
 
-        response = requests.patch(self.URL, json=itemObj)
+        response = requests.patch(self.URL, json=itemObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully edited the module item')
         await interaction.response.send_message(result)
 
@@ -122,7 +122,7 @@ class ItemCog(commands.Cog):
             'position2': position2
         }
         
-        response = requests.put(self.URL, json=itemObj)
+        response = requests.put(self.URL, json=itemObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully moved the module item')
         await interaction.response.send_message(result)
 
@@ -144,7 +144,7 @@ class ItemCog(commands.Cog):
             }
         }
 
-        response = requests.patch(self.URL, json=itemObj)
+        response = requests.patch(self.URL, json=itemObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully hid the module item')
         await interaction.response.send_message(result)
 
@@ -166,7 +166,7 @@ class ItemCog(commands.Cog):
             }
         }
 
-        response = requests.patch(self.URL, json=itemObj)
+        response = requests.patch(self.URL, json=itemObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully made the module item visible')
         await interaction.response.send_message(result)
 

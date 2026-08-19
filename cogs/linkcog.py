@@ -3,7 +3,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import requests
-from cogs.helper import handleResponse
+from cogs.helper import handleResponse, BearerAuth
 from glot import Glot
 
 class LinkCog(commands.Cog):
@@ -45,7 +45,7 @@ class LinkCog(commands.Cog):
         }
 
 
-        response = requests.post(self.URL, json=linkObj)
+        response = requests.post(self.URL, json=linkObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully added the link')
         await interaction.response.send_message(result)
 
@@ -57,7 +57,7 @@ class LinkCog(commands.Cog):
             await interaction.response.send_message('ERROR: `position` cannot be less than 1')
             return
 
-        response = requests.delete(self.URL, json={'position': position})
+        response = requests.delete(self.URL, json={'position': position}, auth=BearerAuth())
         result = handleResponse(response, 'Successfully removed the link')
         await interaction.response.send_message(result)
 
@@ -91,7 +91,7 @@ class LinkCog(commands.Cog):
             'changes': changes
         }
 
-        response = requests.patch(self.URL, json=linkObj)
+        response = requests.patch(self.URL, json=linkObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully edited the link')
         await interaction.response.send_message(result)
 
@@ -105,7 +105,7 @@ class LinkCog(commands.Cog):
             await interaction.response.send_message('ERROR: `position2` cannot be less than 1')
             return
         
-        response = requests.put(self.URL, json={'position': position1, 'position2': position2})
+        response = requests.put(self.URL, json={'position': position1, 'position2': position2}, auth=BearerAuth())
         result = handleResponse(response, 'Successfully moved the link')
         await interaction.response.send_message(result)
 

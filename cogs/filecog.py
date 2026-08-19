@@ -3,7 +3,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import requests
-from cogs.helper import handleResponse
+from cogs.helper import handleResponse, BearerAuth
 from glot import Glot
 
 class FileCog(commands.Cog):
@@ -44,7 +44,7 @@ class FileCog(commands.Cog):
             'display_name': filename
         }
 
-        response = requests.post(self.URL, json=fileObj)
+        response = requests.post(self.URL, json=fileObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully registered the file')
         await interaction.response.send_message(result)
 
@@ -55,7 +55,7 @@ class FileCog(commands.Cog):
             await interaction.response.send_message('ERROR: `path` cannot be empty')
             return
 
-        response = requests.delete(self.URL, json={'key': path})
+        response = requests.delete(self.URL, json={'key': path}, auth=BearerAuth())
         result = handleResponse(response, 'Successfully removed the registered file')
         await interaction.response.send_message(result)
 
@@ -98,7 +98,7 @@ class FileCog(commands.Cog):
             'changes': changes
         }
 
-        response = requests.patch(self.URL, json=fileObj)
+        response = requests.patch(self.URL, json=fileObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully edited the registered file')
         await interaction.response.send_message(result)
         
