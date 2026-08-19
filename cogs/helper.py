@@ -25,5 +25,5 @@ class BearerAuth(AuthBase):
         super().__init__()
 
     def __call__(self, r):
-        r.headers["Authorization"] = f"Bearer ${os.getenv('BEARER')}"
+        r.headers["Authorization"] = f"Bearer {os.getenv('BEARER')}"
         return r
