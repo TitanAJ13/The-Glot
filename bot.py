@@ -30,7 +30,7 @@ if (len(sys.argv) > 2):
     sys.exit()
 elif (len(sys.argv) == 2):
     if (sys.argv[1] == '1'): debug = False
-    if (sys.argv[1] == '0'): pass
+    elif (sys.argv[1] == '0'): pass
     else:
         print(f"Usage: python {sys.argv[0]} [guild:0|1]\n\tguild = 0: Test Server (default)\n\tguild = 1: PMGC Server", flush=True)
         sys.exit()

@@ -9,7 +9,9 @@ import google.auth
 from google.auth.exceptions import DefaultCredentialsError
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+SCOPES = [
+  "https://www.googleapis.com/auth/spreadsheets"
+]
 
 # The ID and range of a sample spreadsheet.
 SAMPLE_SPREADSHEET_ID = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
@@ -21,11 +23,13 @@ def callService(serviceName: str):
   Prints values from a sample spreadsheet.
   """
   creds = None
-  try:
-    creds, project = google.auth.default(scopes=SCOPES)
-  except DefaultCredentialsError as e:
-    if os.path.exists("token.json"):
-      creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+  if os.path.exists("token.json"):
+    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+  # else:
+    # try:
+    #   creds, project = google.auth.default(scopes=SCOPES)
+    # except DefaultCredentialsError as e:
+    #   pass
   # The file token.json stores the user's access and refresh tokens, and is
   # created automatically when the authorization flow completes for the first
   # time.
