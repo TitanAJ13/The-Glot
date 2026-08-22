@@ -75,6 +75,7 @@ class CogLoaderCog(commands.Cog):
 
         try:
             await self.bot.load_extension(f'cogs.{name}')
+            await self.bot.tree.sync(guild=self.bot.currentGuild)
             await interaction.response.send_message(f"Successfully loaded Cog `{name}`!")
         except commands.ExtensionAlreadyLoaded:
             await interaction.response.send_message(f'ERROR: Cog `{name}` is already loaded')
@@ -85,7 +86,7 @@ class CogLoaderCog(commands.Cog):
 
     @group.command(name="reload", description="Reloads a cog")
     @app_commands.describe(name="The filename of the cog to reload")
-    async def cog_reload(self, interaction: discord.Interaction, name:str):
+    async def mycog_reload(self, interaction: discord.Interaction, name:str):
         if (name == ''):
             await interaction.response.send_message('ERROR: `name` cannot be empty')
 
@@ -100,6 +101,7 @@ class CogLoaderCog(commands.Cog):
 
         try:
             await self.bot.reload_extension(f'cogs.{name}')
+            await self.bot.tree.sync(guild=self.bot.currentGuild)
             await interaction.response.send_message(f"Successfully reloaded Cog `{name}`!")
         except commands.ExtensionNotLoaded:
             await interaction.response.send_message(f'ERROR: Cog `{name}` has not been loaded yet')
@@ -141,7 +143,12 @@ class CogLoaderCog(commands.Cog):
         else:
             result = result + "\n\nNo Failures!"
 
-        await interaction.response.send_message(result)
+
+        try:
+            await self.bot.tree.sync(guild=self.bot.currentGuild)
+            await interaction.response.send_message(result)
+        except Exception as e:
+            await interaction.response.send_message(f"ERROR: {e}")
 
 class ExtLoaderCog(commands.Cog):
     group = app_commands.Group(name="extension", description="Work with the dynamically-loaded extensions")
@@ -211,6 +218,7 @@ class ExtLoaderCog(commands.Cog):
 
         try:
             await self.bot.load_extension(f'extensions.{name}')
+            await self.bot.tree.sync(guild=self.bot.currentGuild)
             await interaction.response.send_message(f"Successfully loaded Extension `{name}`!")
         except commands.ExtensionAlreadyLoaded:
             await interaction.response.send_message(f'ERROR: Extension `{name}` is already loaded')
@@ -233,6 +241,7 @@ class ExtLoaderCog(commands.Cog):
 
         try:
             await self.bot.reload_extension(f'extensions.{name}')
+            await self.bot.tree.sync(guild=self.bot.currentGuild)
             await interaction.response.send_message(f"Successfully reloaded Extension `{name}`!")
         except commands.ExtensionNotLoaded:
             await interaction.response.send_message(f'ERROR: Extension `{name}` has not been loaded yet')
@@ -274,7 +283,12 @@ class ExtLoaderCog(commands.Cog):
         else:
             result = result + "\n\nNo Failures!"
 
-        await interaction.response.send_message(result)
+        
+        try:
+            await self.bot.tree.sync(guild=self.bot.currentGuild)
+            await interaction.response.send_message(result)
+        except Exception as e:
+            await interaction.response.send_message(f"ERROR: {e}")
 
 async def setup(bot: Glot):
     await bot.add_cog(CogLoaderCog(bot), guild=bot.currentGuild)
