@@ -9,9 +9,9 @@ from glot import Glot
 class ItemCog(commands.Cog):
     group = app_commands.Group(name='item', description='Make changes to the module subitems on the Glanvas')
 
-    def __init__(self, bot: Glot, base) -> None:
+    def __init__(self, bot: Glot) -> None:
         self.bot: Glot= bot
-        self.URL: str = base + 'items/'
+        self.URL = lambda: self.bot.glanvasURL + 'items/'
         self.group._guild_ids = [bot.currentGuild.id]
 
     @group.command(name="add", description="Adds a new item to a module")
@@ -47,7 +47,7 @@ class ItemCog(commands.Cog):
             'hidden': True if hidden == "True" else False
         }
         
-        response = requests.post(self.URL, json=itemObj, auth=BearerAuth())
+        response = requests.post(self.URL(), json=itemObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully added the module item')
         await interaction.response.send_message(result)
 
@@ -61,7 +61,7 @@ class ItemCog(commands.Cog):
             await interaction.response.send_message('ERROR: `position` cannot be less than 1')
             return
         
-        response = requests.delete(self.URL, json={'moduleposition': moduleposition, 'position': position}, auth=BearerAuth())
+        response = requests.delete(self.URL(), json={'moduleposition': moduleposition, 'position': position}, auth=BearerAuth())
         result = handleResponse(response, 'Successfully deleted the module item')
         await interaction.response.send_message(result)
 
@@ -99,7 +99,7 @@ class ItemCog(commands.Cog):
             'changes': changes
         }
 
-        response = requests.patch(self.URL, json=itemObj, auth=BearerAuth())
+        response = requests.patch(self.URL(), json=itemObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully edited the module item')
         await interaction.response.send_message(result)
 
@@ -122,7 +122,7 @@ class ItemCog(commands.Cog):
             'position2': position2
         }
         
-        response = requests.put(self.URL, json=itemObj, auth=BearerAuth())
+        response = requests.put(self.URL(), json=itemObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully moved the module item')
         await interaction.response.send_message(result)
 
@@ -144,7 +144,7 @@ class ItemCog(commands.Cog):
             }
         }
 
-        response = requests.patch(self.URL, json=itemObj, auth=BearerAuth())
+        response = requests.patch(self.URL(), json=itemObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully hid the module item')
         await interaction.response.send_message(result)
 
@@ -166,9 +166,9 @@ class ItemCog(commands.Cog):
             }
         }
 
-        response = requests.patch(self.URL, json=itemObj, auth=BearerAuth())
+        response = requests.patch(self.URL(), json=itemObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully made the module item visible')
         await interaction.response.send_message(result)
 
 async def setup(bot: Glot):
-    await bot.add_cog(ItemCog(bot, bot.glanvasURL), guild = bot.currentGuild)
+    await bot.add_cog(ItemCog(bot), guild = bot.currentGuild)

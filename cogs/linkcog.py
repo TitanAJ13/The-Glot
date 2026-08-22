@@ -9,9 +9,9 @@ from glot import Glot
 class LinkCog(commands.Cog):
     group = app_commands.Group(name='link', description='Make changes to the links on the Glanvas')
 
-    def __init__(self, bot: Glot, base) -> None:
+    def __init__(self, bot: Glot) -> None:
         self.bot: Glot = bot
-        self.URL: str = base + 'links/'
+        self.URL = lambda: self.bot.glanvasURL + 'links/'
         self.group._guild_ids = [bot.currentGuild.id]
 
 
@@ -45,7 +45,7 @@ class LinkCog(commands.Cog):
         }
 
 
-        response = requests.post(self.URL, json=linkObj, auth=BearerAuth())
+        response = requests.post(self.URL(), json=linkObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully added the link')
         await interaction.response.send_message(result)
 
@@ -57,7 +57,7 @@ class LinkCog(commands.Cog):
             await interaction.response.send_message('ERROR: `position` cannot be less than 1')
             return
 
-        response = requests.delete(self.URL, json={'position': position}, auth=BearerAuth())
+        response = requests.delete(self.URL(), json={'position': position}, auth=BearerAuth())
         result = handleResponse(response, 'Successfully removed the link')
         await interaction.response.send_message(result)
 
@@ -91,7 +91,7 @@ class LinkCog(commands.Cog):
             'changes': changes
         }
 
-        response = requests.patch(self.URL, json=linkObj, auth=BearerAuth())
+        response = requests.patch(self.URL(), json=linkObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully edited the link')
         await interaction.response.send_message(result)
 
@@ -105,9 +105,9 @@ class LinkCog(commands.Cog):
             await interaction.response.send_message('ERROR: `position2` cannot be less than 1')
             return
         
-        response = requests.put(self.URL, json={'position': position1, 'position2': position2}, auth=BearerAuth())
+        response = requests.put(self.URL(), json={'position': position1, 'position2': position2}, auth=BearerAuth())
         result = handleResponse(response, 'Successfully moved the link')
         await interaction.response.send_message(result)
 
 async def setup(bot: Glot):
-    await bot.add_cog(LinkCog(bot, bot.glanvasURL), guild=bot.currentGuild)
+    await bot.add_cog(LinkCog(bot), guild=bot.currentGuild)

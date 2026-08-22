@@ -9,9 +9,9 @@ from glot import Glot
 class MusicCog(commands.Cog):
     group = app_commands.Group(name='music', description='Make changes to the registered sheetmusic on the Glanvas')
 
-    def __init__(self, bot: Glot, base) -> None:
+    def __init__(self, bot: Glot) -> None:
         self.bot: Glot = bot
-        self.URL: str = base + 'musicdata/'
+        self.URL = lambda: self.bot.glanvasURL + 'musicdata/'
         self.group._guild_ids = [bot.currentGuild.id]
 
 
@@ -39,7 +39,7 @@ class MusicCog(commands.Cog):
             'display_name': filename
         }
 
-        response = requests.post(self.URL, json=musicObj, auth=BearerAuth())
+        response = requests.post(self.URL(), json=musicObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully registered the sheetmusic')
         await interaction.response.send_message(result)
 
@@ -50,7 +50,7 @@ class MusicCog(commands.Cog):
             await interaction.response.send_message('ERROR: `path` cannot be empty')
             return
 
-        response = requests.delete(self.URL, json={'key': path}, auth=BearerAuth())
+        response = requests.delete(self.URL(), json={'key': path}, auth=BearerAuth())
         result = handleResponse(response, 'Successfully removed the registered sheetmusic')
         await interaction.response.send_message(result)
 
@@ -88,9 +88,9 @@ class MusicCog(commands.Cog):
             'changes': changes
         }
 
-        response = requests.patch(self.URL, json=musicObj, auth=BearerAuth())
+        response = requests.patch(self.URL(), json=musicObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully edited the registered sheetmusic')
         await interaction.response.send_message(result)
 
 async def setup(bot: Glot):
-    await bot.add_cog(MusicCog(bot, bot.glanvasURL), guild=bot.currentGuild)
+    await bot.add_cog(MusicCog(bot), guild=bot.currentGuild)

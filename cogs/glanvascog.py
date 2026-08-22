@@ -11,9 +11,9 @@ from glot import Glot
 class GlanvasCog(commands.Cog):
     group = app_commands.Group(name='glanvas', description='Make changes to the settings on the Glanvas')
 
-    def __init__(self, bot: Glot, base) -> None:
+    def __init__(self, bot: Glot) -> None:
         self.bot: Glot = bot
-        self.URL: str = base + 'config/'
+        self.URL = lambda: self.bot.glanvasURL + 'config/'
         self.group._guild_ids = [bot.currentGuild.id]
 
 
@@ -26,7 +26,7 @@ class GlanvasCog(commands.Cog):
 
         result = ''
         try:
-            response = requests.get(self.URL + name, auth=BearerAuth())
+            response = requests.get(self.URL() + name, auth=BearerAuth())
             response.raise_for_status()
             if (name == 'all'):
                 json = response.json()
@@ -57,7 +57,7 @@ class GlanvasCog(commands.Cog):
             await interaction.response.send_message('ERROR: `value` cannot be empty')
             return
         
-        response = requests.post(self.URL + name, data=value, auth=BearerAuth())
+        response = requests.post(self.URL() + name, data=value, auth=BearerAuth())
         result = handleResponse(response, f'Successfully set configuration `{name}` to `{value}`')
         await interaction.response.send_message(result)
 
@@ -68,7 +68,7 @@ class GlanvasCog(commands.Cog):
             await interaction.response.send_message('ERROR: `name` cannot be empty')
             return
 
-        response = requests.delete(self.URL + name, auth=BearerAuth())
+        response = requests.delete(self.URL() + name, auth=BearerAuth())
         result = handleResponse(response, f'Successfully reset configuration `{name}`')
         await interaction.response.send_message(result)
 
@@ -99,4 +99,4 @@ class GlanvasCog(commands.Cog):
         await interaction.response.send_message(f'Successfully changed URL from `{temp}` to `{self.bot.defaultURL}`')
 
 async def setup(bot: Glot):
-    await bot.add_cog(GlanvasCog(bot, bot.glanvasURL), guild=bot.currentGuild)
+    await bot.add_cog(GlanvasCog(bot), guild=bot.currentGuild)

@@ -17,9 +17,9 @@ def utc_to_local(time: datetime):
         return time.replace(tzinfo=timezone.utc).astimezone(tz=None)
 
 class AnnouncementCog(commands.Cog):
-    def __init__(self, bot: Glot, base) -> None:
+    def __init__(self, bot: Glot) -> None:
         self.bot: Glot = bot
-        self.URL: str = base + "announcements/"
+        self.URL = lambda: self.bot.glanvasURL + "announcements/"
         self.post_ctx_menu = app_commands.ContextMenu(
             name='Post To Glanvas',
             callback=self.post_announcement,
@@ -65,7 +65,7 @@ class AnnouncementCog(commands.Cog):
     #         'url': url,
     #         'position': position
     #     }
-    #     response = requests.post(self.URL, json=linkObj).json()
+    #     response = requests.post(self.URL(), json=linkObj).json()
     #     if (response.status == 'success'):
     #         await interaction.response.send_message('Succesfully posted link')
     #     else:
@@ -140,7 +140,7 @@ class AnnouncementCog(commands.Cog):
             'content': content,
             'author': author,
             'date_posted': utc_to_local(message.created_at).isoformat(),
-            'url': self.URL,
+            'url': self.URL(),
             'avatar': message.author.display_avatar.url
         }
 
@@ -210,7 +210,7 @@ class AnnouncementCog(commands.Cog):
         messageData = {
             'id': message.id,
             'content': content,
-            'url': self.URL,
+            'url': self.URL(),
             'avatar': message.author.display_avatar.url
         }
 
@@ -283,4 +283,4 @@ class PromptEditTitle(ui.Modal, title="Update Posted Announcement"):
 
 
 async def setup(bot: Glot):
-    await bot.add_cog(AnnouncementCog(bot, bot.glanvasURL))
+    await bot.add_cog(AnnouncementCog(bot))

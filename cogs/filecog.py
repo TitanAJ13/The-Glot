@@ -9,9 +9,9 @@ from glot import Glot
 class FileCog(commands.Cog):
     group = app_commands.Group(name='file', description='Make changes to the registered files on the Glanvas')
 
-    def __init__(self, bot: Glot, base) -> None:
+    def __init__(self, bot: Glot) -> None:
         self.bot: Glot = bot
-        self.URL: str = base + 'files/'
+        self.URL = lambda: self.bot.glanvasURL + 'files/'
         self.group._guild_ids = [bot.currentGuild.id]
 
 
@@ -44,7 +44,7 @@ class FileCog(commands.Cog):
             'display_name': filename
         }
 
-        response = requests.post(self.URL, json=fileObj, auth=BearerAuth())
+        response = requests.post(self.URL(), json=fileObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully registered the file')
         await interaction.response.send_message(result)
 
@@ -55,7 +55,7 @@ class FileCog(commands.Cog):
             await interaction.response.send_message('ERROR: `path` cannot be empty')
             return
 
-        response = requests.delete(self.URL, json={'key': path}, auth=BearerAuth())
+        response = requests.delete(self.URL(), json={'key': path}, auth=BearerAuth())
         result = handleResponse(response, 'Successfully removed the registered file')
         await interaction.response.send_message(result)
 
@@ -98,10 +98,10 @@ class FileCog(commands.Cog):
             'changes': changes
         }
 
-        response = requests.patch(self.URL, json=fileObj, auth=BearerAuth())
+        response = requests.patch(self.URL(), json=fileObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully edited the registered file')
         await interaction.response.send_message(result)
         
 
 async def setup(bot: Glot):
-    await bot.add_cog(FileCog(bot, bot.glanvasURL), guild=bot.currentGuild)
+    await bot.add_cog(FileCog(bot), guild=bot.currentGuild)
