@@ -7,6 +7,7 @@ from discord.ext import commands
 from datetime import date, datetime, timezone
 import re
 import markdown
+import html
 import requests
 from cogs.md_extensions import StrikethroughExtension
 from cogs.helper import BearerAuth
@@ -112,6 +113,17 @@ class AnnouncementCog(commands.Cog):
         content = content.replace("@here", '<span class="mention">@here</span>')
         content = content.replace("@everyone", '<span class="mention">@everyone</span>')
 
+        # Escape all HTML characters
+        content = html.escape(content)
+
+        # Unescape blockquote entries
+        lines = []
+        for line in content.splitlines():
+            if line.lstrip().startswith('&gt;'):
+                line = line.replace('&gt;', '>', 1)
+            lines.append(line)
+        content = '\n'.join(lines)
+
         # Convert from markdown
         md = markdown.Markdown(extensions=['fenced_code', 'sane_lists', 'nl2br', StrikethroughExtension()], tab_length=2)
         md.parser.blockprocessors.deregister('setextheader')
@@ -178,6 +190,17 @@ class AnnouncementCog(commands.Cog):
         # @here and @everyone
         content = content.replace("@here", '<span class="mention">@here</span>')
         content = content.replace("@everyone", '<span class="mention">@everyone</span>')
+
+        # Escape all HTML characters
+        content = html.escape(content)
+
+        # Unescape blockquote entries
+        lines = []
+        for line in content.splitlines():
+            if line.lstrip().startswith('&gt;'):
+                line = line.replace('&gt;', '>', 1)
+            lines.append(line)
+        content = '\n'.join(lines)
 
         # Convert from markdown
         md = markdown.Markdown(extensions=['fenced_code', 'sane_lists', 'nl2br', StrikethroughExtension()], tab_length=2)
