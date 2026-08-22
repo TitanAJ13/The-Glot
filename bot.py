@@ -67,7 +67,8 @@ async def on_ready():
 
     bot.tree.clear_commands(guild=None)
 
-    bot.glanvasURL = 'https://pmgc.pythonanywhere.com/'
+    bot.defaultURL = os.getenv('DEFAULT_URL')
+    bot.glanvasURL = bot.glanvasURL if bot.glanvasURL != '' else bot.defaultURL
     bot.setGuild(guildTest if debug else guildPMGC)
     bot.roster_id = "1bL1uw6ohQ9HNASGVA46ve6_koTpJ6htSBPrwwyWq-TQ"
 

@@ -8,6 +8,7 @@ from discord.role import Role
 
 class Glot(commands.Bot):
     glanvasURL: str = ''
+    defaultURL: str = ''
     currentGuild: Guild = None
     all_roles: Sequence[Role]
     t1: Role
