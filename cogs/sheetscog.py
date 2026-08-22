@@ -25,6 +25,13 @@ class SheetsCog(commands.Cog):
             description="Verify Members without the #verifications channel"
         )
         bot.tree.add_command(verify_command, guild=bot.currentGuild)
+        nickname_command = app_commands.Command(
+            name="send-nicknames",
+            callback= self.send_nicknames,
+            guild_ids=[bot.currentGuild.id],
+            description="Sends members their official glicknames for introductions"
+        )
+        bot.tree.add_command(nickname_command, guild=bot.currentGuild)
 
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(roles="The kinds of roles to update")
@@ -44,6 +51,9 @@ class SheetsCog(commands.Cog):
         data.set_index(pittIndex, inplace=True)
         data.columns = data.iloc[0]
         data.drop(data.index[0],inplace=True)
+        data.index.name = 'Pitt Email'
+        data.columns.name = ''
+        data = data[data.index.notna() & (data.index != '')]
 
         modified_users = []
 
@@ -97,6 +107,59 @@ class SheetsCog(commands.Cog):
         response = await verify(self.bot, user, email, override)
 
         await interaction.response.send_message(response, ephemeral=True)
+
+    @app_commands.checks.has_permissions(administrator=True)
+    async def send_nicknames(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
+        service = authenticate.callService("sheets")
+        result = (
+            service.spreadsheets().values()
+            .get(spreadsheetId=self.bot.roster_id, range="Current", majorDimension="ROWS", valueRenderOption="FORMATTED_VALUE")
+            .execute()
+        )
+        roster = result.get("values", [])
+
+        data = pd.DataFrame(roster)
+        pittIndex = pd.Index(data.iloc[0]).get_loc("Pitt Email")
+        backupIndex = pd.Index(data.iloc[0]).get_loc("Personal Email")
+        data.iloc[:,pittIndex] = data.iloc[:,pittIndex].replace('', np.nan).fillna(data.iloc[:,backupIndex])
+        data.set_index(pittIndex, inplace=True)
+        data.columns = data.iloc[0]
+        data.drop(data.index[0],inplace=True)
+        data.index.name = 'Pitt Email'
+        data.columns.name = ''
+        data = data[data.index.notna() & (data.index != '')]
+
+        sent_users = []
+
+        (rows, cols) = data.shape
+        for i in range(rows):
+            row = data.index[i]
+            id = data.loc[row, "Discord ID"]
+            if not id or math.isnan(float(id)):
+                continue
+            user = interaction.guild.get_member(int(id))
+            if not user:
+                continue
+
+            nickname = data.loc[row, 'Glickname']
+            if not nickname or nickname == '':
+                continue
+
+            await user.send(f"Hey there {user.mention}! Here's your glickname for intros today in case you forgot.\n\n**This is your only nickname and there are no fake nicknames. Please don't mention fake nicknames to the newbies.**\n\nGlickname: `{nickname}`")
+
+            sent_users.append(user.nick if user.nick else user.global_name)
+
+            
+
+        response = "The following users were hypothetically sent their nicknames:\n"
+        if (len(sent_users) == 0):
+            response = "No nicknames were sent. Please check the Current tab in the Working PMGC Roster"
+        else:
+            for name in sent_users:
+                response = response + f"* {name}\n"
+
+        await interaction.followup.send(response)
 
 
 async def updateVoicePart(bot: Glot, user: discord.Member, part: str, reason: str = "Role Update"):
@@ -177,6 +240,9 @@ async def verify(bot: Glot, user: discord.Member, email: str, override: bool):
     data.set_index(pittIndex, inplace=True)
     data.columns = data.iloc[0]
     data.drop(data.index[0],inplace=True)
+    data.index.name = 'Pitt Email'
+    data.columns.name = ''
+    data = data[data.index.notna() & (data.index != '')]
 
     entry = data.loc[email]
 
