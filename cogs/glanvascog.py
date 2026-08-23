@@ -20,8 +20,9 @@ class GlanvasCog(commands.Cog):
     @group.command(name="get", description="Lists a configuration setting")
     @app_commands.describe(name='The name of the setting or `all`')
     async def get_config(self, interaction: discord.Interaction, name: Literal['all', 'pageBase', 'username', 'password', 'web-user', 'web-pass']):
+        await interaction.response.defer(thinking=True)
         if (name == ''):
-            await interaction.response.send_message('ERROR: `name` cannot be empty')
+            await interaction.followup.send('ERROR: `name` cannot be empty')
             return
 
         result = ''
@@ -43,60 +44,66 @@ class GlanvasCog(commands.Cog):
             result = "ERROR: " + html.unescape(e.response.text.split("<p>")[1].split("</p>")[0])
         except Exception as e:
             result = f"ERROR: {e}"
-        await interaction.response.send_message(result)
+        await interaction.followup.send(result)
 
 
 
     @group.command(name="set", description="Sets a configuration setting")
     @app_commands.describe(name='The name of the setting', value='The new value for that setting')
     async def set_config(self, interaction: discord.Interaction, name: Literal['pageBase', 'username', 'password', 'web-user', 'web-pass'], value:str):
+        await interaction.response.defer(thinking=True)
         if (name == ''):
-            await interaction.response.send_message('ERROR: `name` cannot be empty')
+            await interaction.followup.send('ERROR: `name` cannot be empty')
             return
         if (value == ''):
-            await interaction.response.send_message('ERROR: `value` cannot be empty')
+            await interaction.followup.send('ERROR: `value` cannot be empty')
             return
         
         response = requests.post(self.URL() + name, data=value, auth=BearerAuth())
         result = handleResponse(response, f'Successfully set configuration `{name}` to `{value}`')
-        await interaction.response.send_message(result)
+        await interaction.followup.send(result)
 
     @group.command(name="reset", description="Resets a configuration setting to default")
     @app_commands.describe(name='The name of the setting')
     async def reset_config(self, interaction: discord.Interaction, name: Literal['pageBase', 'username', 'password', 'web-user', 'web-pass']):
+        await interaction.response.defer(thinking=True)
         if (name == ''):
-            await interaction.response.send_message('ERROR: `name` cannot be empty')
+            await interaction.followup.send('ERROR: `name` cannot be empty')
             return
 
         response = requests.delete(self.URL() + name, auth=BearerAuth())
         result = handleResponse(response, f'Successfully reset configuration `{name}`')
-        await interaction.response.send_message(result)
+        await interaction.followup.send(result)
 
     @group.command(name="force-logout", description="Forcefully logs out all users. Only use when necessary")
     async def force_logout(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
         response = requests.post(self.bot.glanvasURL + 'force-logout', auth=BearerAuth())
         result = handleResponse(response, 'Successfully logged out all users')
-        await interaction.response.send_message(result)
+        await interaction.followup.send(result)
 
     @group.command(name="url-get", description="Gets the current Glanvas URL stored in The Glot")
     async def get_url(self, interaction: discord.Interaction):
-        await interaction.response.send_message(f'`{self.bot.glanvasURL}`')
+        await interaction.response.defer(thinking=True)
+        await interaction.followup.send(f'`{self.bot.glanvasURL}`')
 
     @group.command(name="url-set", description="Sets the current Glanvas URL stored in The Glot")
     @app_commands.describe(url='The new URL where the Glanvas is hosted')
     async def get_url(self, interaction: discord.Interaction, url: str):
+        await interaction.response.defer(thinking=True)
         if (url == ''):
-            await interaction.response.send_message('ERROR: `url` cannot be empty')
+            await interaction.followup.send('ERROR: `url` cannot be empty')
             return
         temp = self.bot.glanvasURL
         self.bot.glanvasURL = url
-        await interaction.response.send_message(f'Successfully changed URL from `{temp}` to `{url}`')
+        await interaction.followup.send(f'Successfully changed URL from `{temp}` to `{url}`')
 
     @group.command(name="url-reset", description="Resets the Glanvas URL stored in The Glot to default")
     async def get_url(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
         temp = self.bot.glanvasURL
         self.bot.glanvasURL = self.bot.defaultURL
-        await interaction.response.send_message(f'Successfully changed URL from `{temp}` to `{self.bot.defaultURL}`')
+        await interaction.followup.send(f'Successfully changed URL from `{temp}` to `{self.bot.defaultURL}`')
 
 async def setup(bot: Glot):
     await bot.add_cog(GlanvasCog(bot), guild=bot.currentGuild)

@@ -43,19 +43,19 @@ class AnnouncementCog(commands.Cog):
     # @app_commands.describe(type='Type of link', title='Link display title', url='The actual URL', position='Optional: The position to insert it into')
     # async def add_link(self, interaction: discord.Interaction, type: Literal['internal','external','file','music','page','form'], title: str, url: str, position: Optional[int] = None):
     #     if (position is not None and position < 1):
-    #         await interaction.response.send_message('ERROR: `position` cannot be less than 1')
+    #         await interaction.followup.send('ERROR: `position` cannot be less than 1')
     #         return
     #     if (title == ''):
-    #         await interaction.response.send_message('ERROR: `title` cannot be empty')
+    #         await interaction.followup.send('ERROR: `title` cannot be empty')
     #         return
     #     if (url == ''):
-    #         await interaction.response.send_message('ERROR: `url` cannot be empty')
+    #         await interaction.followup.send('ERROR: `url` cannot be empty')
     #         return
     #     if (type == 'internal' and url not in ['home', 'announcements', 'modules']):
-    #         await interaction.response.send_message("ERROR: Internal URLs can only be `home`, `modules`, or `announcements`.")
+    #         await interaction.followup.send("ERROR: Internal URLs can only be `home`, `modules`, or `announcements`.")
     #         return
     #     if (type == 'external' and url[:8] != 'https://'):
-    #         await interaction.response.send_message("ERROR: External URLs must start with `https://`.")
+    #         await interaction.followup.send("ERROR: External URLs must start with `https://`.")
     #         return
     #     title = title.strip()
     #     url = url.strip()
@@ -67,13 +67,14 @@ class AnnouncementCog(commands.Cog):
     #     }
     #     response = requests.post(self.URL(), json=linkObj).json()
     #     if (response.status == 'success'):
-    #         await interaction.response.send_message('Succesfully posted link')
+    #         await interaction.followup.send('Succesfully posted link')
     #     else:
-    #         await interaction.response.send_message(f'ERROR: {response.message}')
+    #         await interaction.followup.send(f'ERROR: {response.message}')
 
     # @app_commands.guilds(614104404102086658)
     @app_commands.checks.has_permissions(administrator=True)
     async def post_announcement(self, interaction: discord.Interaction, message: discord.Message):
+        await interaction.response.defer(thinking=True)
         content = message.content
 
         # Roles
@@ -152,6 +153,7 @@ class AnnouncementCog(commands.Cog):
 
     @app_commands.checks.has_permissions(administrator=True)
     async def edit_announcement(self, interaction: discord.Interaction, message: discord.Message):
+        await interaction.response.defer(thinking=True)
         content = message.content
 
         # Roles
@@ -227,6 +229,7 @@ class PromptTitle(ui.Modal, title="Post an Announcement"):
     display_name = ui.TextInput(label="Announcement Title", placeholder="New Announcement",required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
         announcementObj = {
             "id": self.messageData['id'],
             "author": self.messageData['author'],
@@ -240,9 +243,9 @@ class PromptTitle(ui.Modal, title="Post an Announcement"):
 
         # alert = ResponseAlert()
         if (response['status'] == 'success'):
-            await interaction.response.send_message("Successfully posted the announcement!", ephemeral=True)
+            await interaction.followup.send("Successfully posted the announcement!", ephemeral=True)
         else:
-            await interaction.response.send_message(f"ERROR: {response['message']}", ephemeral=True)
+            await interaction.followup.send(f"ERROR: {response['message']}", ephemeral=True)
             # alert.display.value = f'ERROR: {response['message']}'
 
         # await interaction.response.send_modal(alert)
@@ -255,6 +258,7 @@ class PromptEditTitle(ui.Modal, title="Update Posted Announcement"):
                      component=ui.TextInput(placeholder="New Title",required=False))
 
     async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
         changes = {}
 
         newTitle = self.label.component.value
@@ -274,9 +278,9 @@ class PromptEditTitle(ui.Modal, title="Update Posted Announcement"):
 
         # alert = ResponseAlert()
         if (response['status'] == 'success'):
-            await interaction.response.send_message("Successfully updated the announcement!", ephemeral=True)
+            await interaction.followup.send("Successfully updated the announcement!", ephemeral=True)
         else:
-            await interaction.response.send_message(f"ERROR: {response['message']}", ephemeral=True)
+            await interaction.followup.send(f"ERROR: {response['message']}", ephemeral=True)
             # alert.display.value = f'ERROR: {response['message']}'
 
         # await interaction.response.send_modal(alert)

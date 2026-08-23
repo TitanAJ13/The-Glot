@@ -18,20 +18,21 @@ class MusicCog(commands.Cog):
     @group.command(name="add", description="Registers new sheetmusic")
     @app_commands.describe(url='Link to the sheetmusic', filename='What to call the sheetmusic', path='The special glanvas url to give to this sheetmusic')
     async def add_music(self, interaction: discord.Interaction, url: str, filename: str, path: str):
+        await interaction.response.defer(thinking=True)
         url = url.strip()
         filename = filename.strip()
         path = path.strip()
         if (url == ''):
-            await interaction.response.send_message('ERROR: `url` cannot be empty.')
+            await interaction.followup.send('ERROR: `url` cannot be empty.')
             return
         if (filename == ''):
-            await interaction.response.send_message('ERROR: `filename` cannot be empty.')
+            await interaction.followup.send('ERROR: `filename` cannot be empty.')
             return
         if (path == ''):
-            await interaction.response.send_message('ERROR: `path` cannot be empty.')
+            await interaction.followup.send('ERROR: `path` cannot be empty.')
             return
         if (url[:8] != 'https://'):
-            await interaction.response.send_message('ERROR: `url` must start with `https://`.')
+            await interaction.followup.send('ERROR: `url` must start with `https://`.')
 
         musicObj = {
             'key': path,
@@ -41,37 +42,39 @@ class MusicCog(commands.Cog):
 
         response = requests.post(self.URL(), json=musicObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully registered the sheetmusic')
-        await interaction.response.send_message(result)
+        await interaction.followup.send(result)
 
     @group.command(name="remove", description="Removes registered sheetmusic")
     @app_commands.describe(path='The special glanvas url to remove')
     async def remove_music(self, interaction: discord.Interaction, path: str):
+        await interaction.response.defer(thinking=True)
         if (path == ''):
-            await interaction.response.send_message('ERROR: `path` cannot be empty')
+            await interaction.followup.send('ERROR: `path` cannot be empty')
             return
 
         response = requests.delete(self.URL(), json={'key': path}, auth=BearerAuth())
         result = handleResponse(response, 'Successfully removed the registered sheetmusic')
-        await interaction.response.send_message(result)
+        await interaction.followup.send(result)
 
     @group.command(name="edit", description="Edits an existing sheetmusic registration")
     @app_commands.describe(path ='The special glanvas url for the sheetmusic', new_path = "The updated special glanvas url", url='The url for the sheetmusic', filename='What to call the sheetmusic' )
     async def edit_music(self, interaction: discord.Interaction, path: str, new_path: Optional[str] = None, filename: Optional[str] = None, url: Optional[str] = None):
+        await interaction.response.defer(thinking=True)
         path = path.strip()
         if (path == ''):
-            await interaction.response.send_message('ERROR: `path` cannot be empty')
+            await interaction.followup.send('ERROR: `path` cannot be empty')
             return
         if (new_path is None and filename is None and url is None):
-            await interaction.response.send_message('ERROR: at least one of `new_path`, `filename`, or `url` must be defined')
+            await interaction.followup.send('ERROR: at least one of `new_path`, `filename`, or `url` must be defined')
             return
         if (new_path is not None and new_path.strip() == ''):
-            await interaction.response.send_message('ERROR: `new_path` cannot be empty if it is used')
+            await interaction.followup.send('ERROR: `new_path` cannot be empty if it is used')
             return
         if (filename is not None and filename.strip() == ''):
-            await interaction.response.send_message('ERROR: `filename` cannot be empty if it is used')
+            await interaction.followup.send('ERROR: `filename` cannot be empty if it is used')
             return
         if (url is not None and url.strip() == ''):
-            await interaction.response.send_message('ERROR: `url` cannot be empty if it is used')
+            await interaction.followup.send('ERROR: `url` cannot be empty if it is used')
             return
         
         changes = {}
@@ -90,7 +93,7 @@ class MusicCog(commands.Cog):
 
         response = requests.patch(self.URL(), json=musicObj, auth=BearerAuth())
         result = handleResponse(response, 'Successfully edited the registered sheetmusic')
-        await interaction.response.send_message(result)
+        await interaction.followup.send(result)
 
 async def setup(bot: Glot):
     await bot.add_cog(MusicCog(bot), guild=bot.currentGuild)

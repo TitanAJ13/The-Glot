@@ -21,7 +21,7 @@ class BaseCog(commands.Cog):
 
         if isinstance(message.channel, discord.DMChannel):
             dm = self.bot.get_channel(1414317415751356587)
-            message.forward(dm)
+            await message.forward(dm)
             return
         # if message.channel.id != 1373362239532302399: return
         channel = message.channel.name
@@ -181,47 +181,47 @@ class BaseCog(commands.Cog):
     #         # except:
     #         #     await ctx.reply("Sorry, that email wasn't found in my system. Please check for typos or wait a few days for admins to update the system.")
 
-    async def updateRoles(self, user: discord.Member, part: str, alumni: bool, panther: bool, tour: bool):
-        section_role = discord.utils.find(lambda r: r.name == part, self.bot.all_roles)
+    # async def updateRoles(self, user: discord.Member, part: str, alumni: bool, panther: bool, tour: bool):
+    #     section_role = discord.utils.find(lambda r: r.name == part, self.bot.all_roles)
 
-        for role in [self.bot.t1, self.bot.t2, self.bot.bari, self.bot.bass, self.bot.tacet]:
-            if (role in user.roles and role != section_role):
-                await user.remove_roles(role, reason="Verifiation")
+    #     for role in [self.bot.t1, self.bot.t2, self.bot.bari, self.bot.bass, self.bot.tacet]:
+    #         if (role in user.roles and role != section_role):
+    #             await user.remove_roles(role, reason="Verifiation")
 
-        if (section_role not in user.roles):
-            await user.add_roles(section_role, reason="Verifiation")
+    #     if (section_role not in user.roles):
+    #         await user.add_roles(section_role, reason="Verifiation")
 
-        alumni_role = discord.utils.find(lambda r: r.name == 'Alumni', self.bot.all_roles)
+    #     alumni_role = discord.utils.find(lambda r: r.name == 'Alumni', self.bot.all_roles)
         
-        if (alumni_role not in user.roles and alumni):
-            await user.add_roles(alumni_role, reason="Verifiation")
-        elif (alumni_role in user.roles and not alumni):
-            await user.remove_roles(alumni_role, reason="Verifiation")
+    #     if (alumni_role not in user.roles and alumni):
+    #         await user.add_roles(alumni_role, reason="Verifiation")
+    #     elif (alumni_role in user.roles and not alumni):
+    #         await user.remove_roles(alumni_role, reason="Verifiation")
 
-        panther_role = discord.utils.find(lambda r: r.name == 'Pantherhythms', self.bot.all_roles)
+    #     panther_role = discord.utils.find(lambda r: r.name == 'Pantherhythms', self.bot.all_roles)
         
-        if (panther_role not in user.roles and panther):
-            await user.add_roles(panther_role, reason="Verifiation")
-        elif (panther_role in user.roles and not panther):
-            await user.remove_roles(panther_role, reason="Verifiation")
+    #     if (panther_role not in user.roles and panther):
+    #         await user.add_roles(panther_role, reason="Verifiation")
+    #     elif (panther_role in user.roles and not panther):
+    #         await user.remove_roles(panther_role, reason="Verifiation")
 
-        tour_role = discord.utils.find(lambda r: r.name == 'Tour', self.bot.all_roles)
+    #     tour_role = discord.utils.find(lambda r: r.name == 'Tour', self.bot.all_roles)
         
-        if (tour_role not in user.roles and tour):
-            await user.add_roles(tour_role, reason="Verifiation")
-        elif (tour_role in user.roles and not tour):
-            await user.remove_roles(tour_role, reason="Verifiation")
+    #     if (tour_role not in user.roles and tour):
+    #         await user.add_roles(tour_role, reason="Verifiation")
+    #     elif (tour_role in user.roles and not tour):
+    #         await user.remove_roles(tour_role, reason="Verifiation")
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error : commands.CommandError):
-        if isinstance(error, commands.errors.CheckFailure):
-            await ctx.reply("Sorry, you don't have permission to run that command")
-        elif isinstance(error, commands.errors.TooManyArguments):
-            await ctx.reply("ERROR: Too many arguments; I don't know what to do with this")
-        elif isinstance(error, commands.errors.MissingRequiredArgument):
-            await ctx.reply(f"ERROR: Missing required argument `{error.param}`")
-        else:
-            await ctx.reply(f"{error}")
+    # @commands.Cog.listener()
+    # async def on_command_error(self, ctx, error : commands.CommandError):
+    #     if isinstance(error, commands.errors.CheckFailure):
+    #         await ctx.reply("Sorry, you don't have permission to run that command")
+    #     elif isinstance(error, commands.errors.TooManyArguments):
+    #         await ctx.reply("ERROR: Too many arguments; I don't know what to do with this")
+    #     elif isinstance(error, commands.errors.MissingRequiredArgument):
+    #         await ctx.reply(f"ERROR: Missing required argument `{error.param}`")
+    #     else:
+    #         await ctx.reply(f"{error}")
 
 
 async def setup(bot: Glot):

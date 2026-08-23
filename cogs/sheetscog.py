@@ -36,6 +36,7 @@ class SheetsCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(roles="The kinds of roles to update")
     async def update(self, interaction: discord.Interaction, roles: Literal["all", "voice-parts", "alumni", "pantherhythms", "tour"]):
+        await interaction.response.defer(thinking=True)
         service = authenticate.callService("sheets")
         result = (
             service.spreadsheets().values()
@@ -98,15 +99,16 @@ class SheetsCog(commands.Cog):
             for name in modified_users:
                 response = response + f"* {name}\n"
 
-        await interaction.response.send_message(response, ephemeral=True)
+        await interaction.followup.send(response, ephemeral=True)
 
 
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(user="The user to verify", email="Their Pitt Email on the Roster", override="Whether to override their previous verification (Optional)")
     async def verify_admin(self, interaction: discord.Interaction, user: discord.Member, email: str, override: Optional[bool] = False):
+        await interaction.response.defer(thinking=True)
         response = await verify(self.bot, user, email, override)
 
-        await interaction.response.send_message(response, ephemeral=True)
+        await interaction.followup.send(response, ephemeral=True)
 
     @app_commands.checks.has_permissions(administrator=True)
     async def send_nicknames(self, interaction: discord.Interaction):
@@ -146,7 +148,7 @@ class SheetsCog(commands.Cog):
             if not nickname or nickname == '':
                 continue
 
-            await user.send(f"Hey there {user.mention}! Here's your glickname for intros today in case you forgot.\n\n**This is your only nickname and there are no fake nicknames. Please don't mention fake nicknames to the newbies.**\n\nGlickname: `{nickname}`")
+            await user.send(f"Hey there {user.mention}! Here's your glickname in case you forgot.\n\n**This is your only nickname and there are no fake nicknames. Please don't mention fake nicknames to the newbies.**\n\nGlickname: ```{nickname}```")
 
             sent_users.append(user.nick if user.nick else user.global_name)
 
