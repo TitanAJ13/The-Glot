@@ -9,6 +9,8 @@ from discord.role import Role
 class Glot(commands.Bot):
     glanvasURL: str = ''
     defaultURL: str = ''
+    calendarId: str = ''
+    defaultCalId: str = ''
     currentGuild: Guild = None
     all_roles: Sequence[Role]
     t1: Role
@@ -18,6 +20,7 @@ class Glot(commands.Bot):
     tacet: Role
     alumni: Role
     roster_id: str = ''
+    default_roster_id: str = ''
 
     def setGuild(self, guild: Guild):
         self.currentGuild = guild

@@ -69,8 +69,14 @@ async def on_ready():
 
     bot.defaultURL = os.getenv('DEFAULT_URL')
     bot.glanvasURL = bot.glanvasURL if bot.glanvasURL != '' else bot.defaultURL
+
+    bot.defaultCalId = os.getenv('DEFAULT_CALENDAR_ID')
+    bot.calendarId = bot.calendarId if bot.calendarId != '' else bot.defaultCalId
+
+    bot.default_roster_id = os.getenv('DEFAULT_ROSTER_ID')
+    bot.roster_id = bot.roster_id if bot.roster_id != '' else bot.default_roster_id
+
     bot.setGuild(guildTest if debug else guildPMGC)
-    bot.roster_id = "1bL1uw6ohQ9HNASGVA46ve6_koTpJ6htSBPrwwyWq-TQ"
 
     for filename in os.listdir('cogs'):
         if (filename.endswith('cog.py')):
@@ -148,6 +154,13 @@ async def clear(ctx):
 #     await interaction.response.send_message(f"Test command ran",embed=discord.Embed.from_dict(embed))
 #     interaction.
 
+@bot.tree.error
+async def on_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.CommandOnCooldown):
+        await interaction.followup.send(f'Slow down! Try again in {error.retry_after:.2f} seconds...', ephemeral=True)
+    else:
+        print(error)
+        await interaction.followup.send(f'ERROR: {error}', ephemeral=True)
 
 
 bot.run(TOKEN)

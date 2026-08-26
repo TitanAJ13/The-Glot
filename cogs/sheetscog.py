@@ -37,7 +37,7 @@ class SheetsCog(commands.Cog):
     @app_commands.describe(roles="The kinds of roles to update")
     async def update(self, interaction: discord.Interaction, roles: Literal["all", "voice-parts", "alumni", "pantherhythms", "tour"]):
         await interaction.response.defer(thinking=True)
-        service = authenticate.callService("sheets")
+        service = authenticate.callService("sheets", "v4")
         result = (
             service.spreadsheets().values()
             .get(spreadsheetId=self.bot.roster_id, range="Roster", majorDimension="ROWS", valueRenderOption="FORMATTED_VALUE")
@@ -113,7 +113,7 @@ class SheetsCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def send_nicknames(self, interaction: discord.Interaction):
         await interaction.response.defer(thinking=True)
-        service = authenticate.callService("sheets")
+        service = authenticate.callService("sheets", "v4")
         result = (
             service.spreadsheets().values()
             .get(spreadsheetId=self.bot.roster_id, range="Current", majorDimension="ROWS", valueRenderOption="FORMATTED_VALUE")
@@ -226,7 +226,7 @@ async def verify(bot: Glot, user: discord.Member, email: str, override: bool):
     if not email.endswith('@pitt.edu'):
         email = email + '@pitt.edu'
 
-    service = authenticate.callService("sheets")
+    service = authenticate.callService("sheets", "v4")
     result = (
         service.spreadsheets().values()
         .get(spreadsheetId=bot.roster_id, range="Roster", majorDimension="ROWS", valueRenderOption="FORMATTED_VALUE")

@@ -10,7 +10,8 @@ from google.auth.exceptions import DefaultCredentialsError
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = [
-  "https://www.googleapis.com/auth/spreadsheets"
+  "https://www.googleapis.com/auth/spreadsheets",
+  "https://www.googleapis.com/auth/calendar.readonly"
 ]
 
 # The ID and range of a sample spreadsheet.
@@ -18,7 +19,7 @@ SAMPLE_SPREADSHEET_ID = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
 SAMPLE_RANGE_NAME = "Class Data!A2:E"
 
 
-def callService(serviceName: str):
+def callService(serviceName: str, version: str):
   """Shows basic usage of the Sheets API.
   Prints values from a sample spreadsheet.
   """
@@ -47,7 +48,7 @@ def callService(serviceName: str):
       token.write(creds.to_json())
 
   try:
-    return build(serviceName, "v4", credentials=creds)
+    return build(serviceName, version, credentials=creds)
 
     # Call the Sheets API
     # sheet = service.spreadsheets()
