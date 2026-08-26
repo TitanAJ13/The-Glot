@@ -103,7 +103,15 @@ async def on_ready():
             except Exception as e:
                 print(f'Failed to load extension {filename[:-3]}. Reason: {e}')
 
-    await bot.load_extension("loadercog")
+    try:
+        await bot.load_extension("loadercog")
+        print(f'Loaded extension: loadercog')
+    except commands.ExtensionAlreadyLoaded:
+        print(f'Extension already loaded: loadercog')
+    except commands.ExtensionNotFound:
+        print(f'Extension not found: loadercog')
+    except Exception as e:
+        print(f'Failed to load extension loadercog. Reason: {e}')
 
     print("Synced the following commands:\n", await bot.tree.sync(guild=bot.currentGuild))
     print("Connected to the Guild!")
