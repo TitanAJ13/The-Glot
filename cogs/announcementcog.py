@@ -10,7 +10,7 @@ import markdown
 import html
 import requests
 from cogs.md_extensions import StrikethroughExtension
-from cogs.helper import BearerAuth
+from cogs.helper import BearerAuth, handleResponse
 from glot import Glot
 
 def utc_to_local(time: datetime):
@@ -74,12 +74,11 @@ class AnnouncementCog(commands.Cog):
     # @app_commands.guilds(614104404102086658)
     @app_commands.checks.has_permissions(administrator=True)
     async def post_announcement(self, interaction: discord.Interaction, message: discord.Message):
-        await interaction.response.defer(thinking=True)
         content = message.content
 
         # Roles
-        for match in re.findall(r'<@&.+?>',content):
-            id = match.split("&")[1][:-1]
+        for match in re.findall(r'&lt;@&amp;.+?&gt;',content):
+            id = match.split("&amp;")[1][:-4]
             role = message.guild.get_role(int(id))
             if role.color != discord.Color.default():
                 (r, g, b) = role.color.to_rgb()
@@ -90,22 +89,22 @@ class AnnouncementCog(commands.Cog):
                 content = content.replace(match, replacement)
 
         # Mentions
-        for match in re.findall(r'<@.+?>',content):
-            id = match.split("@")[1][:-1]
+        for match in re.findall(r'&lt;@.+?&gt;',content):
+            id = match.split("@")[1][:-4]
             member = message.guild.get_member(int(id))
             replacement = f'<span class="mention">@{member.nick if member.nick is not None else member.global_name}</span>'
             content = content.replace(match, replacement)
 
         # Channels
-        for match in re.findall(r'<#.+?>',content):
-            id = match.split("#")[1][:-1]
+        for match in re.findall(r'&lt;#.+?&gt;',content):
+            id = match.split("#")[1][:-4]
             channel = message.guild.get_channel_or_thread(int(id))
             replacement = f'<span class="mention">#{channel.name}</span>'
             content = content.replace(match, replacement)
 
         # Custom Emojis
-        for match in re.findall(r'<:.+?:.+?>',content):
-            id = match.split(":")[2][:-1]
+        for match in re.findall(r'&lt;:.+?:.+?&gt;',content):
+            id = match.split(":")[2][:-4]
             url = message.guild.get_emoji(int(id)).url
             replacement = f'<img class="emoji" src="{url}">'
             content = content.replace(match, replacement)
@@ -153,12 +152,14 @@ class AnnouncementCog(commands.Cog):
 
     @app_commands.checks.has_permissions(administrator=True)
     async def edit_announcement(self, interaction: discord.Interaction, message: discord.Message):
-        await interaction.response.defer(thinking=True)
         content = message.content
 
+        # Escape all HTML characters
+        content = html.escape(content)
+
         # Roles
-        for match in re.findall(r'<@&.+?>',content):
-            id = match.split("&")[1][:-1]
+        for match in re.findall(r'&lt;@&amp;.+?&gt;',content):
+            id = match.split("&amp;")[1][:-4]
             role = message.guild.get_role(int(id))
             if role.color != discord.Color.default():
                 (r, g, b) = role.color.to_rgb()
@@ -169,22 +170,22 @@ class AnnouncementCog(commands.Cog):
                 content = content.replace(match, replacement)
 
         # Mentions
-        for match in re.findall(r'<@.+?>',content):
-            id = match.split("@")[1][:-1]
+        for match in re.findall(r'&lt;@.+?&gt;',content):
+            id = match.split("@")[1][:-4]
             member = message.guild.get_member(int(id))
             replacement = f'<span class="mention">@{member.nick if member.nick is not None else member.global_name}</span>'
             content = content.replace(match, replacement)
 
         # Channels
-        for match in re.findall(r'<#.+?>',content):
-            id = match.split("#")[1][:-1]
+        for match in re.findall(r'&lt;#.+?&gt;',content):
+            id = match.split("#")[1][:-4]
             channel = message.guild.get_channel_or_thread(int(id))
             replacement = f'<span class="mention">#{channel.name}</span>'
             content = content.replace(match, replacement)
 
         # Custom Emojis
-        for match in re.findall(r'<:.+?:.+?>',content):
-            id = match.split(":")[2][:-1]
+        for match in re.findall(r'&lt;:.+?:.+?&gt;',content):
+            id = match.split(":")[2][:-4]
             url = message.guild.get_emoji(int(id)).url
             replacement = f'<img class="emoji" src="{url}">'
             content = content.replace(match, replacement)
@@ -192,9 +193,6 @@ class AnnouncementCog(commands.Cog):
         # @here and @everyone
         content = content.replace("@here", '<span class="mention">@here</span>')
         content = content.replace("@everyone", '<span class="mention">@everyone</span>')
-
-        # Escape all HTML characters
-        content = html.escape(content)
 
         # Unescape blockquote entries
         lines = []
@@ -229,7 +227,7 @@ class PromptTitle(ui.Modal, title="Post an Announcement"):
     display_name = ui.TextInput(label="Announcement Title", placeholder="New Announcement",required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer(thinking=True)
+        await interaction.response.defer(thinking=True, ephemeral=True)
         announcementObj = {
             "id": self.messageData['id'],
             "author": self.messageData['author'],
@@ -239,13 +237,33 @@ class PromptTitle(ui.Modal, title="Post an Announcement"):
             "avatar": self.messageData['avatar']
         }
 
-        response = requests.post(self.messageData['url'], json=announcementObj, auth=BearerAuth()).json()
+        response = requests.post(self.messageData['url'], json=announcementObj, auth=BearerAuth())
 
-        # alert = ResponseAlert()
-        if (response['status'] == 'success'):
-            await interaction.followup.send("Successfully posted the announcement!", ephemeral=True)
-        else:
-            await interaction.followup.send(f"ERROR: {response['message']}", ephemeral=True)
+        result = ''
+        try:
+            response.raise_for_status()
+            json = response.json()
+            if (json['status'] == 'success'):
+                result = 'Successfully Posted the Announcement!'
+            else:
+                result =  "Something went wrong..."
+        except requests.HTTPError as e1:
+            if e1.response.status_code == 500:
+                editObj = {
+                    "id": announcementObj['id'],
+                    "changes": {
+                        "title": announcementObj['title'],
+                        "content": announcementObj['content'],
+                        "avatar": announcementObj['avatar']
+                    }
+                }
+                response = requests.patch(self.messageData['url'], json=editObj, auth=BearerAuth())
+
+                result = handleResponse(response, 'Successfully updated the announcement!')
+        except Exception as e2:
+            result =  f"ERROR: {e2}"
+
+        await interaction.followup.send(result, ephemeral=True)
             # alert.display.value = f'ERROR: {response['message']}'
 
         # await interaction.response.send_modal(alert)
@@ -258,7 +276,7 @@ class PromptEditTitle(ui.Modal, title="Update Posted Announcement"):
                      component=ui.TextInput(placeholder="New Title",required=False))
 
     async def on_submit(self, interaction: discord.Interaction):
-        await interaction.response.defer(thinking=True)
+        await interaction.response.defer(thinking=True, ephemeral=True)
         changes = {}
 
         newTitle = self.label.component.value
@@ -274,13 +292,11 @@ class PromptEditTitle(ui.Modal, title="Update Posted Announcement"):
             "changes": changes
         }
 
-        response = requests.patch(self.messageData['url'], json=announcementObj, auth=BearerAuth()).json()
+        response = requests.patch(self.messageData['url'], json=announcementObj, auth=BearerAuth())
 
-        # alert = ResponseAlert()
-        if (response['status'] == 'success'):
-            await interaction.followup.send("Successfully updated the announcement!", ephemeral=True)
-        else:
-            await interaction.followup.send(f"ERROR: {response['message']}", ephemeral=True)
+        result = handleResponse(response, 'Successfully updated the announcement!')
+
+        await interaction.followup.send(result, ephemeral=True)
             # alert.display.value = f'ERROR: {response['message']}'
 
         # await interaction.response.send_modal(alert)
