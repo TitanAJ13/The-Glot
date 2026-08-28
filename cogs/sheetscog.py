@@ -245,7 +245,10 @@ async def verify(bot: Glot, user: discord.Member, email: str, override: bool):
     data.index.name = 'Pitt Email'
     data.columns.name = ''
     data = data[data.index.notna() & (data.index != '')]
-
+ 
+    if email not in data.index:
+        return f"Sorry, that email isn't in my system. Please check for typos or wait for an admin to update the Roster"
+    
     entry = data.loc[email]
 
     id = entry.get("Discord ID")
