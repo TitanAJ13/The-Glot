@@ -75,19 +75,19 @@ class SheetsCog(commands.Cog):
                 inactive = data.loc[row, "Tacet"] == 'TRUE'
                 if (inactive):
                     part = "TACET"
-                changed = changed or await self.updateVoicePart(user, part)
+                changed = await updateVoicePart(user, part) or changed
 
             if (roles in ["all", "alumni"]):
                 alumni = data.loc[row, "Year"] == 'Alumni'
-                changed = changed or await self.updateAlumni(user, alumni)
+                changed = await updateAlumni(user, alumni) or changed
 
             if (roles in ["all", "pantherhythms"]):
                 panther = data.loc[row, "Pantherhythms"] == 'TRUE'
-                changed = changed or await self.updatePanther(user, panther)
+                changed = await updatePanther(user, panther) or changed
 
             if (roles in ["all", "tour"]):
                 tour = data.loc[row, "Tour"] == 'TRUE'
-                changed = changed or await self.updateTour(user, tour)
+                changed = await updateTour(user, tour) or changed
 
             if (changed):
                 modified_users.append(user.nick if user.nick else user.global_name)
@@ -165,10 +165,10 @@ class SheetsCog(commands.Cog):
 
 
 async def updateVoicePart(bot: Glot, user: discord.Member, part: str, reason: str = "Role Update"):
-    section_role = discord.utils.find(lambda r: r.name == part, bot.all_roles)
+    section_role = discord.utils.find(lambda r: r.name == part, bot.voice_parts)
 
     changed = False
-    for role in [bot.t1, bot.t2, bot.bari, bot.bass, bot.tacet]:
+    for role in bot.voice_parts:
         if (role in user.roles and role != section_role):
             await user.remove_roles(role, reason=reason)
             changed = True
@@ -181,37 +181,31 @@ async def updateVoicePart(bot: Glot, user: discord.Member, part: str, reason: st
 
 
 async def updateAlumni(bot: Glot, user: discord.Member, alumni: bool, reason: str = "Role Update"):
-    alumni_role = discord.utils.find(lambda r: r.name == 'Alumni', bot.all_roles)
-
-    if (alumni_role not in user.roles and alumni):
-        await user.add_roles(alumni_role, reason=reason)
+    if (bot.alumni not in user.roles and alumni):
+        await user.add_roles(bot.alumni, reason=reason)
         return True
-    elif (alumni_role in user.roles and not alumni):
-        await user.remove_roles(alumni_role, reason=reason)
+    elif (bot.alumni in user.roles and not alumni):
+        await user.remove_roles(bot.alumni, reason=reason)
         return True
 
     return False
 
 async def updatePanther(bot: Glot, user: discord.Member, panther: bool, reason: str = "Role Update"):
-    panther_role = discord.utils.find(lambda r: r.name == 'Pantherhythms', bot.all_roles)
-
-    if (panther_role not in user.roles and panther):
-        await user.add_roles(panther_role, reason=reason)
+    if (bot.panther not in user.roles and panther):
+        await user.add_roles(bot.panther, reason=reason)
         return True
-    elif (panther_role in user.roles and not panther):
-        await user.remove_roles(panther_role, reason=reason)
+    elif (bot.panther in user.roles and not panther):
+        await user.remove_roles(bot.panther, reason=reason)
         return True
 
     return False
 
 async def updateTour(bot: Glot, user: discord.Member, tour: bool, reason: str = "Role Update"):
-    tour_role = discord.utils.find(lambda r: r.name == 'Tour', bot.all_roles)
-
-    if (tour_role not in user.roles and tour):
-        await user.add_roles(tour_role, reason=reason)
+    if (bot.tour not in user.roles and tour):
+        await user.add_roles(bot.tour, reason=reason)
         return True
-    elif (tour_role in user.roles and not tour):
-        await user.remove_roles(tour_role, reason=reason)
+    elif (bot.tour in user.roles and not tour):
+        await user.remove_roles(bot.tour, reason=reason)
         return True
 
     return False
@@ -219,8 +213,7 @@ async def updateTour(bot: Glot, user: discord.Member, tour: bool, reason: str = 
 async def verify(bot: Glot, user: discord.Member, email: str, override: bool):
 
     email = email.strip().lower()
-    check = discord.utils.find(lambda r: r.name == "Nice Boi", bot.all_roles)
-    if check in user.roles and not override:
+    if bot.check in user.roles and not override:
         return "This user has already been verified"
 
     if not email.endswith('@pitt.edu'):
@@ -269,7 +262,7 @@ async def verify(bot: Glot, user: discord.Member, email: str, override: bool):
     await updateAlumni(bot, user, alumni, "Verification")
     await updatePanther(bot, user, panther, "Verification")
     await updateTour(bot, user, tour, "Verification")
-    await user.add_roles(check, reason="Verification")
+    await user.add_roles(bot.check, reason="Verification")
 
     # await user.edit(nick=f'{first} {last}', reason="Verification")
 

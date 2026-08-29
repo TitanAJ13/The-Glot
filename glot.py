@@ -13,12 +13,16 @@ class Glot(commands.Bot):
     defaultCalId: str = ''
     currentGuild: Guild = None
     all_roles: Sequence[Role]
+    voice_parts: Sequence[Role]
     t1: Role
     t2: Role
     bari: Role
     bass: Role
     tacet: Role
     alumni: Role
+    tour: Role
+    panther: Role
+    check: Role
     roster_id: str = ''
     default_roster_id: str = ''
 
@@ -31,3 +35,7 @@ class Glot(commands.Bot):
         self.bass = discord.utils.find(lambda r:r.name == "Bass", self.all_roles)
         self.tacet = discord.utils.find(lambda r:r.name == "TACET", self.all_roles)
         self.alumni = discord.utils.find(lambda r:r.name == "Alumni", self.all_roles)
+        self.tour = discord.utils.find(lambda r:r.name == "Tour", self.all_roles)
+        self.panther = discord.utils.find(lambda r:r.name == "Pantherhythms", self.all_roles)
+        self.check = discord.utils.find(lambda r:r.name == "Nice Boi", self.all_roles)
+        self.voice_parts = [self.t1, self.t2, self.bari, self.bass, self.tacet]
