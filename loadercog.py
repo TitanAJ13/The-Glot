@@ -86,6 +86,33 @@ class CogLoaderCog(commands.Cog):
         except Exception as e:
             await interaction.followup.send(f'Could not load cog `{name}` — {e}')
 
+    @group.command(name="unload", description="Unloads an active cog")
+    @app_commands.describe(name="The filename of the cog to unload")
+    async def mycog_unload(self, interaction: discord.Interaction, name:str):
+        await interaction.response.defer(thinking=True)
+        if (name == ''):
+            await interaction.followup.send('ERROR: `name` cannot be empty')
+
+        if (name.endswith('.py')):
+            name = name[:-3]
+
+        if (name.startswith('cogs.')):
+            name = name[5:]
+
+        if (not name.endswith('cog')):
+            name = name + 'cog'
+
+        try:
+            await self.bot.unload_extension(f'cogs.{name}')
+            await self.bot.tree.sync(guild=self.bot.currentGuild)
+            await interaction.followup.send(f"Successfully unloaded Cog `{name}`!")
+        except commands.ExtensionAlreadyLoaded:
+            await interaction.followup.send(f'ERROR: Cog `{name}` is not loaded')
+        except commands.ExtensionNotFound:
+            await interaction.followup.send(f'ERROR: Cog `{name}` not found in the `cogs` directory')
+        except Exception as e:
+            await interaction.followup.send(f'Could not unload cog `{name}` — {e}')
+
     @group.command(name="reload", description="Reloads a cog")
     @app_commands.describe(name="The filename of the cog to reload")
     async def mycog_reload(self, interaction: discord.Interaction, name:str):
@@ -232,6 +259,30 @@ class ExtLoaderCog(commands.Cog):
             await interaction.followup.send(f'ERROR: Extension `{name}` not found in the `extensions` directory')
         except Exception as e:
             await interaction.followup.send(f'Could not load extension `{name}` — {e}')
+
+    @group.command(name="unload", description="Unloads an active cog")
+    @app_commands.describe(name="The filename of the cog to unload")
+    async def ext_unload(self, interaction: discord.Interaction, name:str):
+        await interaction.response.defer(thinking=True)
+        if (name == ''):
+            await interaction.followup.send('ERROR: `name` cannot be empty')
+
+        if (name.endswith('.py')):
+            name = name[:-3]
+
+        if (name.startswith('extensions.')):
+            name = name[11:]
+
+        try:
+            await self.bot.unload_extension(f'extensions.{name}')
+            await self.bot.tree.sync(guild=self.bot.currentGuild)
+            await interaction.followup.send(f"Successfully unloaded Extension `{name}`!")
+        except commands.ExtensionAlreadyLoaded:
+            await interaction.followup.send(f'ERROR: Extension `{name}` is not loaded')
+        except commands.ExtensionNotFound:
+            await interaction.followup.send(f'ERROR: Extension `{name}` not found in the `extensions` directory')
+        except Exception as e:
+            await interaction.followup.send(f'Could not unload extension `{name}` — {e}')
 
     @group.command(name="reload", description="Reloads an extension")
     @app_commands.describe(name="The filename of the extension to reload")
