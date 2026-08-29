@@ -7,174 +7,179 @@ from cogs.helper import handleResponse, BearerAuth
 from glot import Glot
 
 class ItemCog(commands.Cog):
-    group = app_commands.Group(name='item', description='Make changes to the module subitems on the Glanvas')
 
     def __init__(self, bot: Glot) -> None:
         self.bot: Glot= bot
         self.URL = lambda: self.bot.glanvasURL + 'items/'
-        self.group._guild_ids = [bot.currentGuild.id]
 
-    @group.command(name="add", description="Adds a new item to a module")
-    @app_commands.describe(moduleposition="The position of the item's container module", title='Item display title', type='The type of item to add', url='The url for the item. Type `None` if making a header', hidden='Optional: If the item should be hidden from view', position='Optional: The position to insert it into')
-    async def add_item(self, interaction: discord.Interaction, moduleposition: int, title: str, type: Literal['internal', 'external', 'file', 'music', 'page','form','header'], url: str, hidden: Optional[Literal['True', 'False']] = 'False', position: Optional[int] = None):
-        await interaction.response.defer(thinking=True)
-        title = title.strip()
-        url = url.strip()
-        if (moduleposition < 1):
-            await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
-            return
-        if (title == ''):
-            await interaction.followup.send('ERROR: `title` cannot be empty')
-            return
-        if (url == ''):
-            await interaction.followup.send('ERROR: `url` cannot be empty')
-            return
-        if (type == 'internal' and url not in ['home', 'announcements', 'modules', 'calendar']):
-            await interaction.followup.send("ERROR: Internal URLs can only be `home`, `modules`, `calendar` or `announcements`.")
-            return
-        if (type == 'external' and url[:8] != 'https://'):
-            await interaction.followup.send("ERROR: External URLs must start with `https://`.")
-            return
-        if (position is not None and position < 1):
-            await interaction.followup.send('ERROR: `position` cannot be less than 1 if defined')
-            return
-        
-        itemObj = {
-            'moduleposition': moduleposition,
-            'display': title,
-            'type': "link" if (type == 'internal' or type == 'external') else type,
-            'url': url,
-            'position': position,
-            'hidden': True if hidden == "True" else False
-        }
-        
-        response = requests.post(self.URL(), json=itemObj, auth=BearerAuth())
-        result = handleResponse(response, 'Successfully added the module item')
-        await interaction.followup.send(result)
+    async def cog_load(self):
+        glanvasGroup = self.bot.tree.get_command('glanvas', guild=self.bot.currentGuild)
+        if isinstance(glanvasGroup, app_commands.Group):
+            group = app_commands.Group(name='item', description='Make changes to the module items on the Glanvas')
 
-    @group.command(name="remove", description="Removes an existing module item")
-    @app_commands.describe(moduleposition='The position of the module in the list', position='The position of the item within the module')
-    async def remove_item(self, interaction: discord.Interaction, moduleposition: int, position: int):
-        await interaction.response.defer(thinking=True)
-        if (moduleposition < 1):
-            await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
-            return
-        if (position < 1):
-            await interaction.followup.send('ERROR: `position` cannot be less than 1')
-            return
-        
-        response = requests.delete(self.URL(), json={'moduleposition': moduleposition, 'position': position}, auth=BearerAuth())
-        result = handleResponse(response, 'Successfully deleted the module item')
-        await interaction.followup.send(result)
+            @group.command(name="add", description="Adds a new item to a module")
+            @app_commands.describe(moduleposition="The position of the item's container module", title='Item display title', type='The type of item to add', url='The url for the item. Type `None` if making a header', hidden='Optional: If the item should be hidden from view', position='Optional: The position to insert it into')
+            async def add_item(interaction: discord.Interaction, moduleposition: int, title: str, type: Literal['internal', 'external', 'file', 'music', 'page','form','header'], url: str, hidden: Optional[Literal['True', 'False']] = 'False', position: Optional[int] = None):
+                await interaction.response.defer(thinking=True)
+                title = title.strip()
+                url = url.strip()
+                if (moduleposition < 1):
+                    await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
+                    return
+                if (title == ''):
+                    await interaction.followup.send('ERROR: `title` cannot be empty')
+                    return
+                if (url == ''):
+                    await interaction.followup.send('ERROR: `url` cannot be empty')
+                    return
+                if (type == 'internal' and url not in ['home', 'announcements', 'modules', 'calendar']):
+                    await interaction.followup.send("ERROR: Internal URLs can only be `home`, `modules`, `calendar` or `announcements`.")
+                    return
+                if (type == 'external' and url[:8] != 'https://'):
+                    await interaction.followup.send("ERROR: External URLs must start with `https://`.")
+                    return
+                if (position is not None and position < 1):
+                    await interaction.followup.send('ERROR: `position` cannot be less than 1 if defined')
+                    return
+                
+                itemObj = {
+                    'moduleposition': moduleposition,
+                    'display': title,
+                    'type': "link" if (type == 'internal' or type == 'external') else type,
+                    'url': url,
+                    'position': position,
+                    'hidden': True if hidden == "True" else False
+                }
+                
+                response = requests.post(self.URL(), json=itemObj, auth=BearerAuth())
+                result = handleResponse(response, 'Successfully added the module item')
+                await interaction.followup.send(result)
 
-    @group.command(name="edit", description="Edits an existing module item")
-    @app_commands.describe(moduleposition='The position of the module in the list', position='The position of the item to edit within the module', title='Item display title', type='The type of item', url='The url for the item. Leave blank if making a header')
-    async def edit_item(self, interaction: discord.Interaction, moduleposition: int, position: int, title: Optional[str] = None, type: Optional[Literal['internal', 'external', 'file', 'music', 'page','form','header']] = None, url: Optional[str] = None):
-        await interaction.response.defer(thinking=True)
-        if (moduleposition < 1):
-            await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
-            return
-        if (position < 1):
-            await interaction.followup.send('ERROR: `position` cannot be less than 1')
-            return
-        if (type is None and title is None and url is None):
-            await interaction.followup.send('ERROR: at least one of `type`, `title`, or `url` must be defined')
-            return
-        if (title is not None and title.strip() == ''):
-            await interaction.followup.send('ERROR: `title` cannot be empty if it is used')
-            return
-        if (url is not None and url.strip() == ''):
-            await interaction.followup.send('ERROR: `url` cannot be empty if it is used')
-            return
-        
-        changes = {}
+            @group.command(name="remove", description="Removes an existing module item")
+            @app_commands.describe(moduleposition='The position of the module in the list', position='The position of the item within the module')
+            async def remove_item(interaction: discord.Interaction, moduleposition: int, position: int):
+                await interaction.response.defer(thinking=True)
+                if (moduleposition < 1):
+                    await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
+                    return
+                if (position < 1):
+                    await interaction.followup.send('ERROR: `position` cannot be less than 1')
+                    return
+                
+                response = requests.delete(self.URL(), json={'moduleposition': moduleposition, 'position': position}, auth=BearerAuth())
+                result = handleResponse(response, 'Successfully deleted the module item')
+                await interaction.followup.send(result)
 
-        if (title is not None):
-            changes['display_name'] = title.strip()
-        if (type is not None):
-            changes['type'] = type
-        if (url is not None):
-            changes['url'] = url.strip()
-        
-        itemObj = {
-            'moduleposition': moduleposition,
-            'position': position,
-            'changes': changes
-        }
+            @group.command(name="edit", description="Edits an existing module item")
+            @app_commands.describe(moduleposition='The position of the module in the list', position='The position of the item to edit within the module', title='Item display title', type='The type of item', url='The url for the item. Leave blank if making a header')
+            async def edit_item(interaction: discord.Interaction, moduleposition: int, position: int, title: Optional[str] = None, type: Optional[Literal['internal', 'external', 'file', 'music', 'page','form','header']] = None, url: Optional[str] = None):
+                await interaction.response.defer(thinking=True)
+                if (moduleposition < 1):
+                    await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
+                    return
+                if (position < 1):
+                    await interaction.followup.send('ERROR: `position` cannot be less than 1')
+                    return
+                if (type is None and title is None and url is None):
+                    await interaction.followup.send('ERROR: at least one of `type`, `title`, or `url` must be defined')
+                    return
+                if (title is not None and title.strip() == ''):
+                    await interaction.followup.send('ERROR: `title` cannot be empty if it is used')
+                    return
+                if (url is not None and url.strip() == ''):
+                    await interaction.followup.send('ERROR: `url` cannot be empty if it is used')
+                    return
+                
+                changes = {}
 
-        response = requests.patch(self.URL(), json=itemObj, auth=BearerAuth())
-        result = handleResponse(response, 'Successfully edited the module item')
-        await interaction.followup.send(result)
+                if (title is not None):
+                    changes['display_name'] = title.strip()
+                if (type is not None):
+                    changes['type'] = type
+                if (url is not None):
+                    changes['url'] = url.strip()
+                
+                itemObj = {
+                    'moduleposition': moduleposition,
+                    'position': position,
+                    'changes': changes
+                }
 
-    @group.command(name="move", description="Moves a module item to a different position within the same module")
-    @app_commands.describe(moduleposition='The position of the module in the list', position1='The current position of the item within the module', position2='The position for the item to end up at')
-    async def move_item(self, interaction: discord.Interaction, moduleposition: int, position1: int, position2: int):
-        await interaction.response.defer(thinking=True)
-        if (moduleposition < 1):
-            await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
-            return
-        if (position1 < 1):
-            await interaction.followup.send('ERROR: `position1` cannot be less than 1')
-            return
-        if (position2 < 1):
-            await interaction.followup.send('ERROR: `position2` cannot be less than 1')
-            return
-        
-        itemObj = {
-            'moduleposition': moduleposition,
-            'position': position1,
-            'position2': position2
-        }
-        
-        response = requests.put(self.URL(), json=itemObj, auth=BearerAuth())
-        result = handleResponse(response, 'Successfully moved the module item')
-        await interaction.followup.send(result)
+                response = requests.patch(self.URL(), json=itemObj, auth=BearerAuth())
+                result = handleResponse(response, 'Successfully edited the module item')
+                await interaction.followup.send(result)
 
-    @group.command(name="hide", description="Hides a module item from view")
-    @app_commands.describe(moduleposition='The position of the module in the list', position='The position of the item within the module')
-    async def hide_item(self, interaction: discord.Interaction, moduleposition: int, position: int):
-        await interaction.response.defer(thinking=True)
-        if (moduleposition < 1):
-            await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
-            return
-        if (position < 1):
-            await interaction.followup.send('ERROR: `position` cannot be less than 1')
-            return
-        
-        itemObj = {
-            'moduleposition': moduleposition,
-            'position': position,
-            'changes': {
-                'hidden': True
-            }
-        }
+            @group.command(name="move", description="Moves a module item to a different position within the same module")
+            @app_commands.describe(moduleposition='The position of the module in the list', position1='The current position of the item within the module', position2='The position for the item to end up at')
+            async def move_item(interaction: discord.Interaction, moduleposition: int, position1: int, position2: int):
+                await interaction.response.defer(thinking=True)
+                if (moduleposition < 1):
+                    await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
+                    return
+                if (position1 < 1):
+                    await interaction.followup.send('ERROR: `position1` cannot be less than 1')
+                    return
+                if (position2 < 1):
+                    await interaction.followup.send('ERROR: `position2` cannot be less than 1')
+                    return
+                
+                itemObj = {
+                    'moduleposition': moduleposition,
+                    'position': position1,
+                    'position2': position2
+                }
+                
+                response = requests.put(self.URL(), json=itemObj, auth=BearerAuth())
+                result = handleResponse(response, 'Successfully moved the module item')
+                await interaction.followup.send(result)
 
-        response = requests.patch(self.URL(), json=itemObj, auth=BearerAuth())
-        result = handleResponse(response, 'Successfully hid the module item')
-        await interaction.followup.send(result)
+            @group.command(name="hide", description="Hides a module item from view")
+            @app_commands.describe(moduleposition='The position of the module in the list', position='The position of the item within the module')
+            async def hide_item(interaction: discord.Interaction, moduleposition: int, position: int):
+                await interaction.response.defer(thinking=True)
+                if (moduleposition < 1):
+                    await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
+                    return
+                if (position < 1):
+                    await interaction.followup.send('ERROR: `position` cannot be less than 1')
+                    return
+                
+                itemObj = {
+                    'moduleposition': moduleposition,
+                    'position': position,
+                    'changes': {
+                        'hidden': True
+                    }
+                }
 
-    @group.command(name="show", description="Makes a hidden module item visible")
-    @app_commands.describe(moduleposition='The position of the module in the list', position='The position of the item within the module')
-    async def show_item(self, interaction: discord.Interaction, moduleposition: int, position: int):
-        await interaction.response.defer(thinking=True)
-        if (moduleposition < 1):
-            await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
-            return
-        if (position < 1):
-            await interaction.followup.send('ERROR: `position` cannot be less than 1')
-            return
-        
-        itemObj = {
-            'moduleposition': moduleposition,
-            'position': position,
-            'changes': {
-                'hidden': False
-            }
-        }
+                response = requests.patch(self.URL(), json=itemObj, auth=BearerAuth())
+                result = handleResponse(response, 'Successfully hid the module item')
+                await interaction.followup.send(result)
 
-        response = requests.patch(self.URL(), json=itemObj, auth=BearerAuth())
-        result = handleResponse(response, 'Successfully made the module item visible')
-        await interaction.followup.send(result)
+            @group.command(name="show", description="Makes a hidden module item visible")
+            @app_commands.describe(moduleposition='The position of the module in the list', position='The position of the item within the module')
+            async def show_item(interaction: discord.Interaction, moduleposition: int, position: int):
+                await interaction.response.defer(thinking=True)
+                if (moduleposition < 1):
+                    await interaction.followup.send('ERROR: `moduleposition` cannot be less than 1')
+                    return
+                if (position < 1):
+                    await interaction.followup.send('ERROR: `position` cannot be less than 1')
+                    return
+                
+                itemObj = {
+                    'moduleposition': moduleposition,
+                    'position': position,
+                    'changes': {
+                        'hidden': False
+                    }
+                }
+
+                response = requests.patch(self.URL(), json=itemObj, auth=BearerAuth())
+                result = handleResponse(response, 'Successfully made the module item visible')
+                await interaction.followup.send(result)
+
+            glanvasGroup.add_command(group)
 
 async def setup(bot: Glot):
     await bot.add_cog(ItemCog(bot), guild = bot.currentGuild)
