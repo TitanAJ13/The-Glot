@@ -11,27 +11,32 @@ from typing import Literal, Optional
 class SheetsCog(commands.Cog):
     def __init__(self, bot: Glot):
         self.bot = bot
-        update_command = app_commands.Command(
+        self.update_command = app_commands.Command(
             name="update-roles",
             callback= self.update,
             guild_ids=[bot.currentGuild.id],
-            description="Sync user roles from the Roster Sheet"
+            description="Sync user roles from the Working PMGC Roster"
         )
-        bot.tree.add_command(update_command, guild=bot.currentGuild)
-        verify_command = app_commands.Command(
+        bot.tree.add_command(self.update_command, guild=bot.currentGuild)
+        self.verify_command = app_commands.Command(
             name="verify",
             callback= self.verify_admin,
             guild_ids=[bot.currentGuild.id],
             description="Verify Members without the #verifications channel"
         )
-        bot.tree.add_command(verify_command, guild=bot.currentGuild)
-        nickname_command = app_commands.Command(
+        bot.tree.add_command(self.verify_command, guild=bot.currentGuild)
+        self.nickname_command = app_commands.Command(
             name="send-nicknames",
             callback= self.send_nicknames,
             guild_ids=[bot.currentGuild.id],
-            description="Sends members their official glicknames for introductions"
+            description="Sends members their official glicknames for introductions or otherwise"
         )
-        bot.tree.add_command(nickname_command, guild=bot.currentGuild)
+        bot.tree.add_command(self.nickname_command, guild=bot.currentGuild)
+
+    async def cog_unload(self):
+        self.bot.tree.remove_command(self.update_command.name, guild=self.bot.currentGuild)
+        self.bot.tree.remove_command(self.verify_command.name, guild=self.bot.currentGuild)
+        self.bot.tree.remove_command(self.nickname_command.name, guild=self.bot.currentGuild)
 
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(roles="The kinds of roles to update")
@@ -40,19 +45,19 @@ class SheetsCog(commands.Cog):
         service = authenticate.callService("sheets", "v4")
         result = (
             service.spreadsheets().values()
-            .get(spreadsheetId=self.bot.roster_id, range="Roster", majorDimension="ROWS", valueRenderOption="FORMATTED_VALUE")
+            .get(spreadsheetId=self.bot.roster_id, range=self.bot.rosterSheets.fullRoster, majorDimension="ROWS", valueRenderOption="FORMATTED_VALUE")
             .execute()
         )
         roster = result.get("values", [])
 
         data = pd.DataFrame(roster)
-        pittIndex = pd.Index(data.iloc[0]).get_loc("Pitt Email")
-        backupIndex = pd.Index(data.iloc[0]).get_loc("Personal Email")
+        pittIndex = pd.Index(data.iloc[0]).get_loc(self.bot.rosterColumns.schoolEmail)
+        backupIndex = pd.Index(data.iloc[0]).get_loc(self.bot.rosterColumns.personalEmail)
         data.iloc[:,pittIndex] = data.iloc[:,pittIndex].replace('', np.nan).fillna(data.iloc[:,backupIndex])
         data.set_index(pittIndex, inplace=True)
         data.columns = data.iloc[0]
         data.drop(data.index[0],inplace=True)
-        data.index.name = 'Pitt Email'
+        data.index.name = self.bot.rosterColumns.schoolEmail
         data.columns.name = ''
         data = data[data.index.notna() & (data.index != '')]
 
@@ -61,7 +66,7 @@ class SheetsCog(commands.Cog):
         (rows, cols) = data.shape
         for i in range(rows):
             row = data.index[i]
-            id = data.loc[row, "Discord ID"]
+            id = data.loc[row, self.bot.rosterColumns.discordId]
             if not id or math.isnan(float(id)):
                 continue
             user = interaction.guild.get_member(int(id))
@@ -71,23 +76,23 @@ class SheetsCog(commands.Cog):
             changed = False
 
             if (roles in ["all", "voice-parts"]):
-                part = data.loc[row, "Voice Part"]
-                inactive = data.loc[row, "Tacet"] == 'TRUE'
+                part = data.loc[row, self.bot.rosterColumns.voicePart]
+                inactive = data.loc[row, self.bot.rosterColumns.tacet] == 'TRUE'
                 if (inactive):
                     part = "TACET"
-                changed = await updateVoicePart(user, part) or changed
+                changed = await updateVoicePart(self.bot, user, part) or changed
 
             if (roles in ["all", "alumni"]):
-                alumni = data.loc[row, "Year"] == 'Alumni'
-                changed = await updateAlumni(user, alumni) or changed
+                alumni = data.loc[row, self.bot.rosterColumns.gradeLevel] == 'Alumni'
+                changed = await updateAlumni(self.bot, user, alumni) or changed
 
             if (roles in ["all", "pantherhythms"]):
-                panther = data.loc[row, "Pantherhythms"] == 'TRUE'
-                changed = await updatePanther(user, panther) or changed
+                panther = data.loc[row, self.bot.rosterColumns.pantherhythms] == 'TRUE'
+                changed = await updatePanther(self.bot, user, panther) or changed
 
             if (roles in ["all", "tour"]):
-                tour = data.loc[row, "Tour"] == 'TRUE'
-                changed = await updateTour(user, tour) or changed
+                tour = data.loc[row, self.bot.rosterColumns.tour] == 'TRUE'
+                changed = await updateTour(self.bot, user, tour) or changed
 
             if (changed):
                 modified_users.append(user.nick if user.nick else user.global_name)
@@ -116,19 +121,19 @@ class SheetsCog(commands.Cog):
         service = authenticate.callService("sheets", "v4")
         result = (
             service.spreadsheets().values()
-            .get(spreadsheetId=self.bot.roster_id, range="Current", majorDimension="ROWS", valueRenderOption="FORMATTED_VALUE")
+            .get(spreadsheetId=self.bot.roster_id, range=self.bot.rosterSheets.currentRoster, majorDimension="ROWS", valueRenderOption="FORMATTED_VALUE")
             .execute()
         )
         roster = result.get("values", [])
 
         data = pd.DataFrame(roster)
-        pittIndex = pd.Index(data.iloc[0]).get_loc("Pitt Email")
-        backupIndex = pd.Index(data.iloc[0]).get_loc("Personal Email")
+        pittIndex = pd.Index(data.iloc[0]).get_loc(self.bot.rosterColumns.schoolEmail)
+        backupIndex = pd.Index(data.iloc[0]).get_loc(self.bot.rosterColumns.personalEmail)
         data.iloc[:,pittIndex] = data.iloc[:,pittIndex].replace('', np.nan).fillna(data.iloc[:,backupIndex])
         data.set_index(pittIndex, inplace=True)
         data.columns = data.iloc[0]
         data.drop(data.index[0],inplace=True)
-        data.index.name = 'Pitt Email'
+        data.index.name = self.bot.rosterColumns.schoolEmail
         data.columns.name = ''
         data = data[data.index.notna() & (data.index != '')]
 
@@ -137,14 +142,14 @@ class SheetsCog(commands.Cog):
         (rows, cols) = data.shape
         for i in range(rows):
             row = data.index[i]
-            id = data.loc[row, "Discord ID"]
+            id = data.loc[row, self.bot.rosterColumns.discordId]
             if not id or math.isnan(float(id)):
                 continue
             user = interaction.guild.get_member(int(id))
             if not user:
                 continue
 
-            nickname = data.loc[row, 'Glickname']
+            nickname = data.loc[row, self.bot.rosterColumns.nickname]
             if not nickname or nickname == '':
                 continue
 
@@ -154,7 +159,7 @@ class SheetsCog(commands.Cog):
 
             
 
-        response = "The following users were hypothetically sent their nicknames:\n"
+        response = "The following users were sent their nicknames:\n"
         if (len(sent_users) == 0):
             response = "No nicknames were sent. Please check the Current tab in the Working PMGC Roster"
         else:
@@ -165,10 +170,18 @@ class SheetsCog(commands.Cog):
 
 
 async def updateVoicePart(bot: Glot, user: discord.Member, part: str, reason: str = "Role Update"):
-    section_role = discord.utils.find(lambda r: r.name == part, bot.voice_parts)
+    conversion = {
+        "Tenor 1": bot.t1Role(),
+        "Tenor 2": bot.t2Role(),
+        "Baritone": bot.bariRole(),
+        "Bass": bot.bassRole(),
+        "TACET": bot.tacetRole()
+    }
+
+    section_role = conversion[part]
 
     changed = False
-    for role in bot.voice_parts:
+    for role in bot.voice_parts():
         if (role in user.roles and role != section_role):
             await user.remove_roles(role, reason=reason)
             changed = True
@@ -181,31 +194,37 @@ async def updateVoicePart(bot: Glot, user: discord.Member, part: str, reason: st
 
 
 async def updateAlumni(bot: Glot, user: discord.Member, alumni: bool, reason: str = "Role Update"):
-    if (bot.alumni not in user.roles and alumni):
-        await user.add_roles(bot.alumni, reason=reason)
+    alumniRole = bot.alumniRole()
+
+    if (alumniRole not in user.roles and alumni):
+        await user.add_roles(alumniRole, reason=reason)
         return True
-    elif (bot.alumni in user.roles and not alumni):
-        await user.remove_roles(bot.alumni, reason=reason)
+    elif (alumniRole in user.roles and not alumni):
+        await user.remove_roles(alumniRole, reason=reason)
         return True
 
     return False
 
 async def updatePanther(bot: Glot, user: discord.Member, panther: bool, reason: str = "Role Update"):
-    if (bot.panther not in user.roles and panther):
-        await user.add_roles(bot.panther, reason=reason)
+    pantherRole = bot.pantherRole()
+
+    if (pantherRole not in user.roles and panther):
+        await user.add_roles(pantherRole, reason=reason)
         return True
-    elif (bot.panther in user.roles and not panther):
-        await user.remove_roles(bot.panther, reason=reason)
+    elif (pantherRole in user.roles and not panther):
+        await user.remove_roles(pantherRole, reason=reason)
         return True
 
     return False
 
 async def updateTour(bot: Glot, user: discord.Member, tour: bool, reason: str = "Role Update"):
-    if (bot.tour not in user.roles and tour):
-        await user.add_roles(bot.tour, reason=reason)
+    tourRole = bot.tourRole()
+
+    if (tourRole not in user.roles and tour):
+        await user.add_roles(tourRole, reason=reason)
         return True
-    elif (bot.tour in user.roles and not tour):
-        await user.remove_roles(bot.tour, reason=reason)
+    elif (tourRole in user.roles and not tour):
+        await user.remove_roles(tourRole, reason=reason)
         return True
 
     return False
@@ -213,7 +232,7 @@ async def updateTour(bot: Glot, user: discord.Member, tour: bool, reason: str = 
 async def verify(bot: Glot, user: discord.Member, email: str, override: bool):
 
     email = email.strip().lower()
-    if bot.check in user.roles and not override:
+    if bot.checkRole() in user.roles and not override:
         return "This user has already been verified"
 
     if not email.endswith('@pitt.edu'):
@@ -222,20 +241,20 @@ async def verify(bot: Glot, user: discord.Member, email: str, override: bool):
     service = authenticate.callService("sheets", "v4")
     result = (
         service.spreadsheets().values()
-        .get(spreadsheetId=bot.roster_id, range="Roster", majorDimension="ROWS", valueRenderOption="FORMATTED_VALUE")
+        .get(spreadsheetId=bot.roster_id, range=bot.rosterSheets.fullRoster, majorDimension="ROWS", valueRenderOption="FORMATTED_VALUE")
         .execute()
     )
     roster = result.get("values", [])
 
     data = pd.DataFrame(roster)
-    pittIndex = pd.Index(data.iloc[0]).get_loc("Pitt Email")
-    backupIndex = pd.Index(data.iloc[0]).get_loc("Personal Email")
-    idIndex = pd.Index(data.iloc[0]).get_loc("Discord ID")
+    pittIndex = pd.Index(data.iloc[0]).get_loc(bot.rosterColumns.schoolEmail)
+    backupIndex = pd.Index(data.iloc[0]).get_loc(bot.rosterColumns.personalEmail)
+    idIndex = pd.Index(data.iloc[0]).get_loc(bot.rosterColumns.discordId)
     data.iloc[:,pittIndex] = data.iloc[:,pittIndex].replace('', np.nan).fillna(data.iloc[:,backupIndex])
     data.set_index(pittIndex, inplace=True)
     data.columns = data.iloc[0]
     data.drop(data.index[0],inplace=True)
-    data.index.name = 'Pitt Email'
+    data.index.name = bot.rosterColumns.schoolEmail
     data.columns.name = ''
     data = data[data.index.notna() & (data.index != '')]
  
@@ -244,34 +263,34 @@ async def verify(bot: Glot, user: discord.Member, email: str, override: bool):
     
     entry = data.loc[email]
 
-    id = entry.get("Discord ID")
+    id = entry.get(bot.rosterColumns.discordId)
 
     if (not math.isnan(float(id)) and int(id) != user.id and not override):
         return "Sorry, that email has already been used to verify another member"
 
-    first = entry.get("First Name")
-    last = entry.get("Last Name")
-    section = entry.get("Voice Part")
-    if entry.get("Tacet") == 'TRUE':
+    first = entry.get(bot.rosterColumns.firstName)
+    last = entry.get(bot.rosterColumns.lastName)
+    section = entry.get(bot.rosterColumns.voicePart)
+    if entry.get(bot.rosterColumns.tacet) == 'TRUE':
         section = 'TACET'
-    alumni = entry.get("Year") == 'Alumni'
-    panther = entry.get("Pantherhythms") == 'TRUE'
-    tour = entry.get("Tour") == 'TRUE'
+    alumni = entry.get(bot.rosterColumns.gradeLevel) == 'Alumni'
+    panther = entry.get(bot.rosterColumns.pantherhythms) == 'TRUE'
+    tour = entry.get(bot.rosterColumns.tour) == 'TRUE'
 
     await updateVoicePart(bot, user, section, "Verification")
     await updateAlumni(bot, user, alumni, "Verification")
     await updatePanther(bot, user, panther, "Verification")
     await updateTour(bot, user, tour, "Verification")
-    await user.add_roles(bot.check, reason="Verification")
+    await user.add_roles(bot.checkRole(), reason="Verification")
 
-    # await user.edit(nick=f'{first} {last}', reason="Verification")
+    await user.edit(nick=f'{first} {last}', reason="Verification")
 
     col = numToCol(idIndex + 1)
     row = data.index.get_loc(email) + 2
 
     result2 = (
         service.spreadsheets().values()
-        .update(spreadsheetId=bot.roster_id, range=f"Roster!{col}{row}", valueInputOption="RAW", body={'values': [[str(user.id)]]})
+        .update(spreadsheetId=bot.roster_id, range=f"{bot.rosterSheets.fullRoster}!{col}{row}", valueInputOption="RAW", body={'values': [[str(user.id)]]})
         .execute()
     )
 

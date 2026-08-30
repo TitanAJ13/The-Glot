@@ -103,7 +103,7 @@ async def list_commands(interaction: discord.Interaction):
 # @client.event
 @bot.event
 async def on_ready():
-    guildPMGC = bot.get_guild(614104404102086658)
+    guildPMGC = bot.get_guild(os.getenv('GUILD_ID'))
     guildTest = bot.get_guild(1378895395253387344)
 
     bot.tree.clear_commands(guild=None)
