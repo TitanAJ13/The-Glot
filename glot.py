@@ -62,6 +62,8 @@ class Glot(commands.Bot):
     pantherRole: Callable[[], Role]
     check: str = "Nice Boi"
     checkRole: Callable[[], Role]
+    board: str = "E-Board"
+    boardRole: Callable[[], Role]
     roster_id: str = ''
     default_roster_id: str = ''
     rosterColumns = SpreadsheetColumns()
@@ -80,4 +82,5 @@ class Glot(commands.Bot):
         self.tourRole = lambda: discord.utils.find(lambda r:r.name == self.tour, self.all_roles)
         self.pantherRole = lambda: discord.utils.find(lambda r:r.name == self.panther, self.all_roles)
         self.checkRole = lambda: discord.utils.find(lambda r:r.name == self.check, self.all_roles)
+        self.boardRole = lambda: discord.utils.find(lambda r:r.name == self.board, self.all_roles)
         self.voice_parts = lambda: [self.t1Role(), self.t2Role(), self.bariRole(), self.bassRole(), self.tacetRole()]

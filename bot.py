@@ -65,7 +65,10 @@ async def sync(interaction: discord.Interaction):
 @group.command(name="clear", description="Clears all Slash- and Context Menu- Commands")
 async def clear(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
+    loader = bot.tree.get_command("cog")
     bot.tree.clear_commands(guild=None)
+    bot.tree.add_command(group) #Prevent from deleting itself
+    bot.tree.add_command(loader) #Prevent from deleting loader command
     await bot.tree.sync(guild=None)
     await interaction.followup.send(f"Cleared commands")
 
@@ -103,7 +106,7 @@ async def list_commands(interaction: discord.Interaction):
 # @client.event
 @bot.event
 async def on_ready():
-    guildPMGC = bot.get_guild(os.getenv('GUILD_ID'))
+    guildPMGC = bot.get_guild(int(os.getenv('GUILD_ID')))
     guildTest = bot.get_guild(1378895395253387344)
 
     bot.tree.clear_commands(guild=None)
@@ -188,6 +191,15 @@ async def on_error(interaction: discord.Interaction, error: app_commands.AppComm
     else:
         print(error)
         await interaction.followup.send(f'ERROR: {error}', ephemeral=True)
+        
+@bot.event
+async def on_error(event_method: str, *args, **kwargs):
+    errorType, error, traceback = sys.exc_info()
+    print(errorType, error, traceback)
+
+    if (event_method == 'on_message'):
+        message = args[0]
+        await message.reply(f'{errorType}: {error}', mention_author=False)
 
 
 bot.run(TOKEN)

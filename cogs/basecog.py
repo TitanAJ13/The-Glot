@@ -1,4 +1,5 @@
 import discord
+import sys
 from discord import app_commands
 from discord.ext import commands
 from glot import Glot
@@ -7,7 +8,6 @@ import pandas as pd
 import fitz
 from io import BytesIO
 import authenticate
-from cogs.sheetscog import verify
 
 class BaseCog(commands.Cog):
     def __init__(self, bot: Glot):
@@ -58,8 +58,25 @@ class BaseCog(commands.Cog):
         id = user.id
         email = message.content.strip().lower()
 
-        response = await verify(self.bot, user, email, False)
-        await message.reply(response)
+        cog = self.bot.get_cog("SheetsCog")
+        if (cog):
+            response = await cog.verify(user, email, False)
+            await message.reply(response)
+        else:
+            bot_channel = discord.utils.find(lambda r:r.name == 'bot-commands', self.bot.currentGuild.channels)
+            if (bot_channel):
+                await bot_channel.send(content=
+                    f"""Cog `SheetsCog` wasn't found, so I couldn't verify {user.mention}.
+                    
+                    Please use the `/cog list` command to check its status or try `/cog reload sheets`.
+                    
+                    If that does not fix the issue, check the Documentation for further troubleshooting""")
+            else:
+                message.channel.send(content=
+                    f"""{self.bot.boardRole().mention} ERROR 3 has occurred. Please refer to the Documentation for troubleshooting.
+                    
+                    If any newbies see this, please wait to verify until the issue is resolved, or this message will continue to be sent""")
+            
 
     @app_commands.checks.has_permissions(administrator=True)
     async def print_ids(self, interaction: discord.Interaction):
